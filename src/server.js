@@ -13,7 +13,14 @@ const { notFound, errorHandler } = require('./middleware/error');
 
 const app = express();
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: env.corsOrigin === '*' ? true : env.corsOrigin, credentials: true }));
+// CORS abierto: acepta cualquier origen. Cambia a un dominio específico para producción estricta.
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.options('*', cors());
 app.use(express.json({ limit: '12mb' }));
 app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use(morgan('dev'));
