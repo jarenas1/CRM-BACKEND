@@ -48,8 +48,8 @@ router.post('/companies/:id/import-as-lead', auth.authRequired, companyControlle
 router.get('/quotations', auth.authRequired, quotationController.list);
 router.get('/quotations/search', auth.authRequired, quotationController.search);
 router.get('/quotations/:numero', auth.authRequired, quotationController.load);
-router.get('/quotations/:numero/preview', auth.authRequired, quotationController.renderHtml);
-router.get('/quotations/:numero/pdf', auth.authRequired, quotationController.renderPdf);
+router.get('/quotations/:numero/preview', quotationController.renderHtml);
+router.get('/quotations/:numero/pdf', quotationController.renderPdf);
 router.post('/quotations', auth.authRequired, quotationController.create);
 router.post('/quotations/email-preview', auth.authRequired, quotationController.emailPreview);
 router.put('/quotations/:numero/state', auth.authRequired, quotationController.updateState);
@@ -58,8 +58,8 @@ router.put('/quotations/:numero/state', auth.authRequired, quotationController.u
 router.get('/agreements', auth.authRequired, agreementController.list);
 router.get('/agreements/search', auth.authRequired, agreementController.search);
 router.get('/agreements/:numero', auth.authRequired, agreementController.load);
-router.get('/agreements/:numero/preview', auth.authRequired, agreementController.renderHtml);
-router.get('/agreements/:numero/pdf', auth.authRequired, agreementController.renderPdf);
+router.get('/agreements/:numero/preview', agreementController.renderHtml);
+router.get('/agreements/:numero/pdf', agreementController.renderPdf);
 router.post('/agreements', auth.authRequired, agreementController.create);
 router.post('/agreements/email-preview', auth.authRequired, agreementController.emailPreview);
 router.put('/agreements/:numero/state', auth.authRequired, agreementController.updateState);
@@ -68,8 +68,8 @@ router.put('/agreements/:numero/state', auth.authRequired, agreementController.u
 router.get('/reservations', auth.authRequired, reservationController.list);
 router.get('/reservations/search', auth.authRequired, reservationController.search);
 router.get('/reservations/:numero', auth.authRequired, reservationController.load);
-router.get('/reservations/:numero/preview', auth.authRequired, reservationController.renderHtml);
-router.get('/reservations/:numero/pdf', auth.authRequired, reservationController.renderPdf);
+router.get('/reservations/:numero/preview', reservationController.renderHtml);
+router.get('/reservations/:numero/pdf', reservationController.renderPdf);
 router.post('/reservations', auth.authRequired, reservationController.create);
 router.post('/reservations/email-preview', auth.authRequired, reservationController.emailPreview);
 router.put('/reservations/:id', auth.authRequired, reservationController.update);

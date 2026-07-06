@@ -1,58 +1,37 @@
 /**
- * Renderiza HTML a PDF.
- * Estrategia: intenta Puppeteer (alta fidelidad). Si no está disponible
- * en el entorno (sin Chromium, serverless, etc.) cae a un PDF generado
- * con PDFKit como respaldo simple.
+ * Renderiza HTML a PDF con Puppeteer manteniendo todos los estilos
+ * (backgrounds, fuentes, imágenes embebidas como data URIs, etc.).
+ *
+ * Antes existía un fallback a PDFKit que descartaba el HTML y solo
+ * imprimía texto plano — eso producía PDFs sin estilos y ocultaba
+ * problemas reales de Puppeteer. Se eliminó a propósito: si Puppeteer
+ * falla se lanza el error para que quede visible en logs.
  */
-let puppeteer = null;
-try { puppeteer = require('puppeteer'); } catch (e) { /* sin puppeteer */ }
-const PDFDocument = require('pdfkit');
+const puppeteer = require('puppeteer');
 
 async function renderHtmlToPdfBuffer(html) {
-  if (puppeteer) {
-    try {
-      const browser = await puppeteer.launch({
-        headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      const pdf = await page.pdf({
-        format: 'A4',
-        printBackground: true,
-        margin: { top: '14mm', right: '12mm', bottom: '14mm', left: '12mm' },
-      });
-      await browser.close();
-      return pdf;
-    } catch (e) {
-      console.warn('Puppeteer falló, usando PDFKit fallback:', e.message);
-    }
-  }
-  return renderFallbackPdf(html);
-}
-
-function renderFallbackPdf(html) {
-  return new Promise((resolve) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 40 });
-    const chunks = [];
-    doc.on('data', (c) => chunks.push(c));
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    const text = html
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<br\s*\/?>(?!\n)/gi, '\n')
-      .replace(/<\/(p|div|tr|li|h\d|table)>/gi, '\n')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/\n\s*\n/g, '\n\n')
-      .trim();
-    doc.fontSize(11).text(text, { width: 515 });
-    doc.end();
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+    ],
   });
+  try {
+    const page = await browser.newPage();
+    await page.emulateMediaType('print');
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      preferCSSPageSize: false,
+      margin: { top: '14mm', right: '12mm', bottom: '14mm', left: '12mm' },
+    });
+    return Buffer.isBuffer(pdf) ? pdf : Buffer.from(pdf);
+  } finally {
+    await browser.close();
+  }
 }
 
 module.exports = { renderHtmlToPdfBuffer };

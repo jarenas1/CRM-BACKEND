@@ -1,9 +1,11 @@
 const env = require('../config/env');
 const { fmtMoneda, fmtFecha, esc } = require('../utils/format');
+const { getLogoDataUri } = require('../utils/logo');
 
 module.exports = function buildReservaHtml(data, numero, firmante = {}) {
   const C = env.colores;
   const H = env.hotel;
+  const logoSrc = getLogoDataUri();
   const noches = data.noches || 1;
   const habitaciones = data.numeroHabitaciones || 1;
   const valor = parseFloat(data.valorNoche) || 0;
@@ -26,10 +28,7 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
   <div style="background:${C.verde};padding:24px 36px;border-bottom:4px solid ${C.dorado};">
     <table style="width:100%;"><tr>
       <td style="vertical-align:middle;">
-        <div style="font-size:38px;color:#fff;font-style:italic;line-height:1;">V</div>
-        <div style="font-size:19px;color:#fff;letter-spacing:3px;margin-top:4px;">GRAND HOTEL</div>
-        <div style="font-size:10px;color:${C.dorado};letter-spacing:5px;">MEDELLÍN</div>
-        <div style="font-size:8px;color:#cfd8d2;letter-spacing:2px;margin-top:4px;">${H.miembro.toUpperCase()}</div>
+        <img src="${logoSrc}" alt="V Grand Hotel" style="height:90px;width:auto;display:block;background:#fff;padding:8px;border-radius:10px;" />
       </td>
       <td style="vertical-align:middle;text-align:right;color:#fff;">
         <div style="font-size:19px;letter-spacing:3px;">CONFIRMACIÓN DE RESERVA</div>
@@ -102,14 +101,7 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
 
     ${data.observaciones ? `<div style="margin-top:14px;font-size:10px;background:${C.crema};border-left:3px solid ${C.verde};padding:10px 14px;"><strong>Observaciones:</strong> ${esc(data.observaciones)}</div>` : ''}
 
-    <table style="width:100%;margin-top:22px;"><tr><td style="vertical-align:bottom;">
-      ${firmaImg}
-      <div style="border-top:1px solid ${C.grisTexto};width:240px;padding-top:5px;font-size:10px;">
-        Quedo atento a sus comentarios.<br>Cordialmente,<br>
-        <strong>${esc(firmante.nombre || H.razonSocial)}</strong><br>
-        ${esc(firmante.cargo || 'Departamento de Reservas')}<br>${H.nombre}
-      </div>
-    </td></tr></table>
+    <div style="margin-top:22px;">${firmaImg}</div>
   </div>
   <div style="background:${C.verde};padding:12px;text-align:center;border-top:3px solid ${C.dorado};">
     <span style="color:${C.dorado};font-size:10px;letter-spacing:4px;">${H.slogan}</span><br>

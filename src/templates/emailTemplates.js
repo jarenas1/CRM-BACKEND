@@ -1,5 +1,6 @@
 const env = require('../config/env');
 const { fmtMoneda, fmtFecha, esc } = require('../utils/format');
+const { getLogoDataUri } = require('../utils/logo');
 
 function botonPago() {
   const C = env.colores;
@@ -21,10 +22,7 @@ function shell(titulo, contenido, firmante) {
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;background:#fff;border:1px solid ${C.linea};">
     <div style="background:${C.verde};padding:24px;text-align:center;border-bottom:4px solid ${C.dorado};">
-      <div style="font-family:Georgia,serif;font-size:34px;color:#fff;font-style:italic;line-height:1;">V</div>
-      <div style="font-family:Georgia,serif;font-size:17px;color:#fff;letter-spacing:4px;margin-top:4px;">GRAND HOTEL</div>
-      <div style="font-size:10px;color:${C.dorado};letter-spacing:5px;">MEDELLÍN</div>
-      <div style="font-size:8px;color:#cfd8d2;letter-spacing:2px;margin-top:5px;">${H.miembro.toUpperCase()}</div>
+      <img src="${getLogoDataUri()}" alt="V Grand Hotel" style="height:110px;width:auto;background:#fff;padding:10px;border-radius:12px;display:inline-block;" />
     </div>
     <div style="background:${C.crema};padding:11px 24px;border-bottom:1px solid ${C.linea};">
       <div style="font-size:13px;color:${C.verde};font-weight:bold;letter-spacing:1px;">${titulo}</div>

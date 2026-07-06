@@ -1,9 +1,11 @@
 const env = require('../config/env');
 const { fmtMoneda, fmtFecha, esc } = require('../utils/format');
+const { getLogoDataUri } = require('../utils/logo');
 
 module.exports = function buildCotizacionHtml(data, numero, totales, firmante = {}) {
   const C = env.colores;
   const H = env.hotel;
+  const logoSrc = getLogoDataUri();
   const m = data.moneda || 'COP';
   const fecha = fmtFecha(new Date());
 
@@ -30,9 +32,6 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     ? `<tr><td style="padding:5px 10px;">Impuesto de Servicio (10%):</td><td style="padding:5px 10px;text-align:right;">${fmtMoneda(totales.servicio, m)}</td></tr>`
     : '';
 
-  const tdT = `style="padding:4px 14px 4px 0;font-size:9.5px;color:${C.grisTexto};vertical-align:top;line-height:1.55;"`;
-  const h4 = `style="margin:0 0 4px;font-size:10.5px;color:${C.verde};"`;
-
   const firmaImg = firmante.firmaDataUri
     ? `<img src="${firmante.firmaDataUri}" style="max-height:52px;max-width:210px;display:block;margin-bottom:2px;">`
     : '';
@@ -42,10 +41,7 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
   <div style="background:${C.verde};padding:26px 36px;border-bottom:4px solid ${C.dorado};">
     <table style="width:100%;"><tr>
       <td style="vertical-align:middle;">
-        <div style="font-size:40px;color:#fff;font-style:italic;line-height:1;">V</div>
-        <div style="font-size:21px;color:#fff;letter-spacing:3px;margin-top:4px;">GRAND HOTEL</div>
-        <div style="font-size:11px;color:${C.dorado};letter-spacing:5px;">MEDELLÍN</div>
-        <div style="font-size:8.5px;color:#cfd8d2;letter-spacing:2px;margin-top:5px;">${H.miembro.toUpperCase()}</div>
+        <img src="${logoSrc}" alt="V Grand Hotel" style="height:96px;width:auto;display:block;background:#fff;padding:8px;border-radius:10px;" />
       </td>
       <td style="vertical-align:middle;text-align:right;color:#fff;">
         <div style="font-size:22px;letter-spacing:4px;">COTIZACIÓN</div>
@@ -110,45 +106,7 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
       <div style="color:#cfd8d2;font-size:8.5px;margin-top:4px;">Pago seguro vía Wompi · tarjeta, PSE o link</div>
     </div>
 
-    <div style="margin-top:18px;border-top:2px solid ${C.dorado};padding-top:10px;">
-      <div style="font-size:12px;letter-spacing:2px;color:${C.verde};font-weight:bold;margin-bottom:8px;">TÉRMINOS Y CONDICIONES GENERALES</div>
-      <table style="width:100%;border-collapse:collapse;"><tr>
-        <td ${tdT} width="50%">
-          <h4 ${h4}>1. Política de Pagos</h4>
-          <strong>Individuales:</strong> 10 días antes: 50%; 2 días antes: 100%.<br>
-          <strong>Grupos:</strong> 60 días: 20% de la 1ª noche; 45 días: 80% restante; 30 días: 20% del total; 10 días: saldo total.<br>
-          <strong>Pago:</strong> transferencia, tarjeta o link de pago.
-          <h4 ${h4} style="margin-top:8px;">3. No-Show</h4>
-          <strong>Individuales:</strong> cancelar con menos de 24 h o no presentarse: cargo de 1 noche.
-          <h4 ${h4} style="margin-top:8px;">5. Check-in / Check-out</h4>
-          Check-in: ${H.checkIn} · Check-out: ${H.checkOut}
-        </td>
-        <td ${tdT} width="50%">
-          <h4 ${h4}>2. Modificaciones y Cancelaciones</h4>
-          <strong>Grupos:</strong> sin penalidad hasta 30 días antes. 29–20 días: 40%. 19–10 días: 60%. Menos de 10 días: 100%.<br>
-          <strong>Individuales:</strong> sin cargo hasta 24 h antes.
-          <h4 ${h4} style="margin-top:8px;">4. Servicios</h4>
-          Incluye solo lo especificado. No incluye propinas ni extras.
-          <h4 ${h4} style="margin-top:8px;">6. Disponibilidad</h4>
-          Precios y disponibilidad sujetos a confirmación al momento de la reserva.
-        </td>
-      </tr></table>
-    </div>
-
-    <div style="margin-top:14px;background:${C.crema};padding:10px 16px;font-size:10px;border-left:3px solid ${C.verde};">
-      <strong style="color:${C.verde};">7. Contacto para Reservas</strong><br>
-      Ventas: ${H.emailVentas} · Reservas: ${H.emailReservas}<br>
-      WhatsApp: ${H.whatsapp} · Horario: ${H.horario}
-    </div>
-
-    <table style="width:100%;margin-top:22px;"><tr><td style="vertical-align:bottom;">
-      ${firmaImg}
-      <div style="border-top:1px solid ${C.grisTexto};width:240px;padding-top:5px;font-size:10px;">
-        Atentamente,<br>
-        <strong>${esc(firmante.nombre || H.razonSocial)}</strong><br>
-        ${esc(firmante.cargo || 'Equipo Comercial')}<br>${H.nombre}
-      </div>
-    </td></tr></table>
+    <div style="margin-top:28px;">${firmaImg}</div>
   </div>
   <div style="background:${C.verde};padding:12px;text-align:center;border-top:3px solid ${C.dorado};">
     <span style="color:${C.dorado};font-size:10px;letter-spacing:4px;">${H.slogan}</span><br>
