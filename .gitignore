@@ -5,3 +5,4 @@ logs
 *.log
 storage/uploads/*
 !storage/uploads/.gitkeep
+.cache/

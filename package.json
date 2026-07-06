@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/seeders/seed.js",
-    "db:sync": "node src/scripts/sync.js"
+    "db:sync": "node src/scripts/sync.js",
+    "postinstall": "node -e \"try { require('child_process').execSync('npx --yes puppeteer browsers install chrome', { stdio: 'inherit' }); } catch (e) { console.warn('Skipping puppeteer chrome install:', e.message); }\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
