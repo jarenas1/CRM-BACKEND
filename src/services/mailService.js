@@ -3,23 +3,38 @@ const env = require('../config/env');
 const tplEmail = require('../templates/emailTemplates');
 const { fmtMoneda, esc } = require('../utils/format');
 const userRepo = require('../repositories/userRepository');
+const { whiteLogoInlineAttachments } = require('../utils/logo');
 const quotationService = require('./quotationService');
 const agreementService = require('./agreementService');
 const reservationService = require('./reservationService');
+
+// Convierte una firma en data URI (data:image/png;base64,...) en un adjunto
+// inline con CID, para que renderice bien en clientes de correo como Gmail.
+function firmaInlineAttachment(dataUri, cid) {
+  if (!dataUri || typeof dataUri !== 'string') return null;
+  const m = dataUri.match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
+  if (!m) return null;
+  return {
+    filename: `firma.${(m[1].split('/')[1] || 'png').replace('svg+xml', 'svg')}`,
+    content: Buffer.from(m[2], 'base64'),
+    contentType: m[1],
+    cid,
+    contentDisposition: 'inline',
+  };
+}
 
 let transporter = null;
 
 function getTransporter() {
   if (transporter) return transporter;
   if (!env.smtp.user || !env.smtp.pass) {
-    throw new Error('SMTP no configurado: define SMTP_USER y SMTP_PASS en .env');
+    throw new Error('SMTP no configurado: define SMTP_USER (tu Gmail) y SMTP_PASS (App Password de 16 caracteres) en .env');
   }
   transporter = nodemailer.createTransport({
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.secure,
     auth: { user: env.smtp.user, pass: env.smtp.pass },
-    tls: { ciphers: 'TLSv1.2', rejectUnauthorized: false },
   });
   return transporter;
 }
@@ -145,18 +160,27 @@ async function sendReservation({ numero, user, extraCc, mensajePersonalizado }) 
   if (!r.email) throw new Error('La reserva no tiene email destinatario');
 
   const pdfBuffer = await reservationService.renderPdf(numero);
-  const firmante = { nombre: sender.name, cargo: sender.cargo, firmaDataUri: sender.firma };
-  const intro = mensajePersonalizado
-    ? `<p>${esc(mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
-    : `te confirmo tu reserva <strong>N° ${esc(r.codigoReserva || numero)}</strong> en <strong>${env.hotel.nombreLargo}</strong>. En el PDF adjunto está toda la información: fechas, valor, acomodaciones y políticas.`;
 
-  const contenido =
-    saludo(sender.name, r.titular, intro) +
-    tplEmailBoxReserva(r) +
-    botonPagar() +
-    noReplyBanner();
+  // Logos inline (CID) + firma inline (CID) → HTML liviano y sin clipping en Gmail.
+  const logoAttachments = whiteLogoInlineAttachments();
+  const firmaAtt = firmaInlineAttachment(sender.firma, 'firma-usuario');
+  const firmante = {
+    nombre: sender.name,
+    cargo: sender.cargo,
+    firmaCid: firmaAtt ? 'firma-usuario' : null,
+  };
 
-  const html = tplEmail.shell(`CONFIRMACIÓN DE RESERVA N° ${numero}`, contenido, firmante);
+  const html = tplEmail.reservaEmail(r, numero, firmante, { mensajePersonalizado });
+
+  const attachments = [
+    {
+      filename: `${numero} - Reserva - ${r.titular || 'huesped'}.pdf`,
+      content: pdfBuffer,
+      contentType: 'application/pdf',
+    },
+    ...logoAttachments,
+  ];
+  if (firmaAtt) attachments.push(firmaAtt);
 
   return enviar({
     to: r.email,
@@ -164,11 +188,7 @@ async function sendReservation({ numero, user, extraCc, mensajePersonalizado }) 
     subject: `Confirmación de reserva ${numero} — ${env.hotel.nombre}`,
     html,
     senderName: sender.name,
-    attachments: [{
-      filename: `${numero} - Reserva - ${r.titular || 'huesped'}.pdf`,
-      content: pdfBuffer,
-      contentType: 'application/pdf',
-    }],
+    attachments,
   });
 }
 
@@ -231,20 +251,6 @@ function tplEmailBoxConvenio(a) {
       <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(a.tarifaDoble, 'COP')}</td>
       <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(a.tarifaSuite, 'COP')}</td>
     </tr>
-  </table>`;
-}
-
-function tplEmailBoxReserva(r) {
-  const C = env.colores;
-  return `
-  <table style="width:100%;background:${C.crema};border-left:4px solid ${C.dorado};margin:18px 0;border-collapse:collapse;border-radius:8px;overflow:hidden;">
-    <tr><td style="padding:16px 18px;">
-      <div style="font-size:11px;color:${C.dorado};letter-spacing:1px;">VALOR TOTAL A PAGAR</div>
-      <div style="font-size:22px;color:${C.verde};font-weight:bold;margin-top:2px;">${fmtMoneda(r.total, 'COP')}${r.aplicaIva ? ' IVA incluido' : ''}</div>
-      <div style="font-size:12.5px;margin-top:6px;">
-        Check-in: <strong>${r.fechaLlegada}</strong> · Check-out: <strong>${r.fechaSalida}</strong>
-      </div>
-    </td></tr>
   </table>`;
 }
 

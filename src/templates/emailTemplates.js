@@ -1,6 +1,6 @@
 const env = require('../config/env');
 const { fmtMoneda, fmtFecha, esc } = require('../utils/format');
-const { getLogoDataUri } = require('../utils/logo');
+const { getLogoDataUri, LOGO_CID } = require('../utils/logo');
 
 function botonPago() {
   const C = env.colores;
@@ -121,4 +121,102 @@ function reserva(data, numero, firmante) {
   return shell(`CONFIRMACIÓN DE RESERVA N° ${numero}`, intro + box, firmante);
 }
 
-module.exports = { cotizacion, convenio, reserva, shell, botonPago };
+// Correo de reserva: cuerpo simple y amable con logos en blanco sobre verde.
+// El detalle completo va en el PDF adjunto (descargable).
+function reservaEmail(r, numero, firmante = {}, opts = {}) {
+  const C = env.colores;
+  const H = env.hotel;
+  const brass = '#b08d57';
+  // Logos por CID (adjuntos inline) para evitar el clipping de Gmail y que rendericen bien.
+  const logoMainWhite = `cid:${LOGO_CID.vgrandWhite}`;
+  const logoRadWhite = `cid:${LOGO_CID.radissonWhite}`;
+
+  const codigo = r.codigoReserva || numero;
+  const titular = r.titular || '';
+  const total = parseFloat(r.total) || 0;
+
+  // La firma va por CID cuando se envía por correo; como data URI solo en vista previa.
+  const firmaSrc = (firmante && firmante.firmaCid)
+    ? `cid:${firmante.firmaCid}`
+    : (firmante && firmante.firmaDataUri) || '';
+  const firmaImg = firmaSrc
+    ? `<img src="${firmaSrc}" alt="Firma" style="display:block;border:0;margin:6px 0;max-height:56px;max-width:220px;height:auto;">`
+    : '';
+  const nombre = (firmante && firmante.nombre) || H.razonSocial;
+  const cargo = (firmante && firmante.cargo) || 'Líder de Reservas';
+
+  const logoImg = (src, alt, w) => (src
+    ? `<img src="${src}" alt="${esc(alt)}" width="${w}" style="display:inline-block;border:0;max-width:100%;height:auto;vertical-align:middle;">`
+    : `<span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#fff;letter-spacing:1px;">${esc(alt)}</span>`);
+
+  const intro = opts.mensajePersonalizado
+    ? `<p style="margin:0 0 14px 0;">${esc(opts.mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
+    : `<p style="margin:0 0 14px 0;">Aquí encontrarás la confirmación de tu reserva <strong>N.° ${esc(codigo)}</strong> en <strong>${esc(H.nombreLargo)}</strong>. `
+      + 'Ha sido un gusto gestionarla para ti.</p>'
+      + '<p style="margin:0 0 14px 0;">Adjuntamos el <strong>documento PDF</strong> con todos los detalles: fechas, valor, acomodaciones, horarios y políticas. Puedes descargarlo y conservarlo para cualquier gestión.</p>';
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">`
+    + `<meta name="viewport" content="width=device-width, initial-scale=1.0">`
+    + `<style>body{margin:0;padding:0;background:#e9e5dd;}`
+    + `@media only screen and (max-width:620px){.container{width:100%!important;}.px{padding-left:22px!important;padding-right:22px!important;}}</style></head>`
+    + `<body style="margin:0;padding:0;background:#e9e5dd;">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e9e5dd;"><tr><td align="center" style="padding:26px 12px;">`
+
+    + `<table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #ddd5c7;">`
+
+    // header: logos en blanco sobre verde
+    + `<tr><td style="background:${C.verde};padding:24px 34px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>`
+    + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMainWhite, 'V Grand Hotel Medellín', 168)}</td>`
+    + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRadWhite, 'Member of Radisson Individuals', 118)}</td>`
+    + `</tr></table></td></tr>`
+    + `<tr><td style="height:3px;background:${brass};line-height:3px;font-size:0;">&nbsp;</td></tr>`
+
+    // título
+    + `<tr><td class="px" style="padding:26px 34px 4px 34px;">`
+    + `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${brass};text-transform:uppercase;">Confirmación de reserva</div>`
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:23px;color:${C.verde};padding-top:6px;">Hola${titular ? ' ' + esc(titular) : ''}</div>`
+    + `</td></tr>`
+
+    // cuerpo amable
+    + `<tr><td class="px" style="padding:12px 34px 0 34px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:${C.grisTexto};">`
+    + intro
+    + `</td></tr>`
+
+    // callout del PDF adjunto
+    + `<tr><td class="px" style="padding:8px 34px 0 34px;">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf6ee;border:1px solid #e7dcc6;border-radius:8px;"><tr>`
+    + `<td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${C.grisTexto};line-height:1.5;">`
+    + `<span style="color:${brass};font-weight:bold;">&#128206; Documento adjunto</span><br>`
+    + `Tu confirmación en PDF &middot; reserva N.° <strong>${esc(codigo)}</strong>`
+    + (total ? ` &middot; Total <strong>${fmtMoneda(total, 'COP')}</strong>${r.aplicaIva ? ' IVA incl.' : ''}` : '')
+    + `</td></tr></table>`
+    + `</td></tr>`
+
+    // botón pagar
+    + `<tr><td class="px" style="padding:6px 34px 0 34px;">${botonPago()}</td></tr>`
+
+    // cierre + firma
+    + `<tr><td class="px" style="padding:18px 34px 28px 34px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${C.grisTexto};">`
+    + `<p style="margin:0 0 12px 0;">Quedamos atentos a cualquier inquietud. &iexcl;Ser&aacute; un placer recibirte!</p>`
+    + `<p style="margin:0;color:#8a857c;font-size:13px;">Cordialmente,</p>`
+    + firmaImg
+    + `<p style="margin:6px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:${C.verde};"><strong>${esc(nombre)}</strong></p>`
+    + `<p style="margin:2px 0 0 0;color:#8a857c;font-size:13px;">${esc(cargo)} &middot; ${esc(H.nombre)}</p>`
+    + `</td></tr>`
+
+    // footer: logos en blanco sobre verde
+    + `<tr><td style="background:${C.verdeOscuro};padding:22px 34px;">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>`
+    + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMainWhite, 'V Grand Hotel Medellín', 140)}</td>`
+    + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRadWhite, 'Member of Radisson Individuals', 108)}</td>`
+    + `</tr></table>`
+    + `<div style="height:1px;background:#2f3e38;margin:14px 0;line-height:1px;font-size:0;">&nbsp;</div>`
+    + `<div style="font-family:Georgia,serif;color:${brass};font-size:11px;letter-spacing:3px;">${esc(H.slogan)}</div>`
+    + `<div style="font-family:Arial,Helvetica,sans-serif;color:#b8c2bd;font-size:11px;line-height:1.6;margin-top:6px;">${esc(H.direccion)}<br>Tel.: ${esc(H.whatsapp)} &middot; ${esc(H.emailReservas)} &middot; ${esc(H.web)}</div>`
+    + `</td></tr>`
+
+    + `</table>`
+    + `</td></tr></table></body></html>`;
+}
+
+module.exports = { cotizacion, convenio, reserva, reservaEmail, shell, botonPago };

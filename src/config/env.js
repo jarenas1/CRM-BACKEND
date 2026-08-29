@@ -22,17 +22,25 @@ const env = {
     cargo: process.env.ADMIN_CARGO || 'Director de Trade Marketing',
   },
 
-  smtp: {
-    host: process.env.SMTP_HOST || 'smtp-mail.outlook.com',
-    port: parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: false, // STARTTLS en 587
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
-    from: process.env.SMTP_FROM || process.env.SMTP_USER || '',
-    fromName: process.env.SMTP_FROM_NAME || 'V Grand Hotel Medellín',
-    replyTo: process.env.SMTP_REPLY_TO || 'no-reply@v-grandhotels.com',
-    ccFijo: process.env.EMAIL_CC_FIJO || 'juanjoarenas1218@gmail.com',
-  },
+  smtp: (() => {
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = parseInt(process.env.SMTP_PORT || '465', 10);
+    // SSL directo en 465; STARTTLS en 587. Se puede forzar con SMTP_SECURE.
+    const secure = process.env.SMTP_SECURE !== undefined
+      ? process.env.SMTP_SECURE === 'true'
+      : port === 465;
+    return {
+      host,
+      port,
+      secure,
+      user: process.env.SMTP_USER || '',
+      pass: process.env.SMTP_PASS || '',
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || '',
+      fromName: process.env.SMTP_FROM_NAME || 'V Grand Hotel Medellín',
+      replyTo: process.env.SMTP_REPLY_TO || 'reservas@v-grandhotels.com',
+      ccFijo: process.env.EMAIL_CC_FIJO || 'juanjoarenas1218@gmail.com',
+    };
+  })(),
 
   hotel: {
     nombre: 'V Grand Hotel Medellín',
