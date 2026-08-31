@@ -8,6 +8,21 @@ const tplCnv = require('../templates/convenioTemplate');
 const tplEmail = require('../templates/emailTemplates');
 const { renderHtmlToPdfBuffer } = require('./pdfService');
 
+// Normaliza las tarifas a [{ tipo, valor(number) }]. Si un convenio antiguo no
+// tiene el array, lo deriva de las columnas legadas (Sencilla/Doble/Junior Suite).
+function normTarifas(a) {
+  const arr = Array.isArray(a.tarifas) ? a.tarifas : [];
+  const clean = arr
+    .filter((t) => t && t.tipo)
+    .map((t) => ({ tipo: String(t.tipo), valor: parseFloat(t.valor) || 0 }));
+  if (clean.length) return clean;
+  return [
+    { tipo: 'Habitación Sencilla', valor: parseFloat(a.tarifaSencilla) || 0 },
+    { tipo: 'Habitación Doble', valor: parseFloat(a.tarifaDoble) || 0 },
+    { tipo: 'Junior Suite', valor: parseFloat(a.tarifaSuite) || 0 },
+  ].filter((t) => t.valor > 0);
+}
+
 function mapList(a) {
   const p = a.toJSON ? a.toJSON() : a;
   return {
@@ -16,9 +31,7 @@ function mapList(a) {
     empresa: p.empresa,
     contacto: p.contacto,
     email: p.email,
-    tarifaSencilla: parseFloat(p.tarifaSencilla) || 0,
-    tarifaDoble: parseFloat(p.tarifaDoble) || 0,
-    tarifaSuite: parseFloat(p.tarifaSuite) || 0,
+    tarifas: normTarifas(p),
     estado: p.estado,
     vigenciaHasta: p.vigenciaHasta,
     fecha: p.createdAt,
@@ -40,7 +53,9 @@ async function search(q) {
 async function load(numero) {
   const a = await agreementRepo.findByNumero(numero);
   if (!a) throw Object.assign(new Error('No se encontró el convenio ' + numero), { status: 404 });
-  return a.toJSON();
+  const obj = a.toJSON();
+  obj.tarifas = normTarifas(obj);
+  return obj;
 }
 
 async function create(data, user) {
@@ -65,9 +80,7 @@ async function create(data, user) {
     cargo: data.cargo,
     email: data.email,
     telefono: data.telefono,
-    tarifaSencilla: data.tarifaSencilla || 0,
-    tarifaDoble: data.tarifaDoble || 0,
-    tarifaSuite: data.tarifaSuite || 0,
+    tarifas: normTarifas({ tarifas: data.tarifas }),
     personaAdicional: data.personaAdicional || 120000,
     vigenciaHasta: data.vigenciaHasta || null,
     fechasRestringidas: data.fechasRestringidas || null,

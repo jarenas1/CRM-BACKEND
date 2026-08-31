@@ -8,6 +8,15 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
   const vig = fmtFechaLarga(data.vigenciaHasta) || `31 de diciembre de ${new Date().getFullYear()}`;
   const pa = parseFloat(data.personaAdicional) || 120000;
 
+  const tarifas = (Array.isArray(data.tarifas) ? data.tarifas : []).filter((t) => t && t.tipo);
+  const tarifaRows = tarifas.map((t, i) => {
+    const bg = i % 2 === 0 ? '#ffffff' : CO.cream;
+    return `<tr style="background:${bg};">`
+      + `<td style="padding:8px 12px;border:1px solid ${CO.line};">${esc(t.tipo)}</td>`
+      + `<td style="padding:8px 12px;border:1px solid ${CO.line};text-align:right;font-weight:bold;">${fmtMoneda(t.valor, 'COP')}</td>`
+      + '</tr>';
+  }).join('');
+
   const sec = `style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;font-weight:bold;margin:16px 0 6px;border-bottom:2px solid ${CO.brass};padding-bottom:4px;"`;
   const li = 'style="margin:0 0 6px;font-size:10px;line-height:1.55;text-align:justify;"';
   const firmaImg = firmante.firmaDataUri
@@ -26,18 +35,12 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
     + `nos es grato presentar nuestra propuesta tarifaria con beneficios preferenciales que aplicarán entre `
     + `<strong>${esc(data.empresa)}</strong> y ${esc(H.nombreLargo)}.</p>`
 
-    + `<table style="width:100%;margin-top:10px;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:11px;">`
+    + `<div style="font-size:10.5px;color:${CO.muted};margin:10px 0 4px;">Tarifas preferenciales en <strong style="color:${CO.green2};">${esc(H.nombreLargo)}</strong> (COP por habitación/noche):</div>`
+    + '<table style="width:100%;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:11px;">'
     + `<thead><tr style="background:${CO.green2};color:#fff;">`
-    + '<th style="padding:9px;text-align:left;">Hotel</th>'
-    + '<th style="padding:9px;text-align:center;">Hab. sencilla</th>'
-    + '<th style="padding:9px;text-align:center;">Hab. doble</th>'
-    + '<th style="padding:9px;text-align:center;">Junior Suite</th></tr></thead>'
-    + `<tbody><tr style="background:${CO.cream};">`
-    + `<td style="padding:9px;border:1px solid ${CO.line};">${esc(H.nombreLargo)}</td>`
-    + `<td style="padding:9px;border:1px solid ${CO.line};text-align:center;font-weight:bold;font-size:12px;">${fmtMoneda(data.tarifaSencilla, 'COP')}</td>`
-    + `<td style="padding:9px;border:1px solid ${CO.line};text-align:center;font-weight:bold;font-size:12px;">${fmtMoneda(data.tarifaDoble, 'COP')}</td>`
-    + `<td style="padding:9px;border:1px solid ${CO.line};text-align:center;font-weight:bold;font-size:12px;">${fmtMoneda(data.tarifaSuite, 'COP')}</td>`
-    + '</tr></tbody></table>'
+    + '<th style="padding:9px 12px;text-align:left;">Tipo de habitación</th>'
+    + '<th style="padding:9px 12px;text-align:right;">Tarifa (COP / noche)</th></tr></thead>'
+    + `<tbody>${tarifaRows || `<tr><td colspan="2" style="padding:9px 12px;border:1px solid ${CO.line};text-align:center;color:${CO.muted};">Sin tarifas registradas</td></tr>`}</tbody></table>`
     + `<div style="text-align:center;margin-top:10px;font-size:11px;font-weight:bold;color:${CO.green2};">Convenio vigente hasta el ${vig}</div>`
     + `<div style="text-align:center;font-size:9.5px;font-style:italic;margin-top:3px;color:${CO.muted};">Tarifas en pesos colombianos (COP), sujetas a impuestos al momento de la llegada.</div>`
     + `<div style="text-align:center;font-size:10px;font-weight:bold;margin-top:5px;">Tarifas NO COMISIONABLES · NO INCLUYEN IMPUESTOS — considerar IVA del 19%</div>`

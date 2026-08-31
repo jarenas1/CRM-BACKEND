@@ -154,8 +154,8 @@ async function sendReservation({ numero, user, extraCc, mensajePersonalizado }) 
 
   const pdfBuffer = await reservationService.renderPdf(numero);
 
-  // Logos inline (CID) + firma inline (CID) → HTML liviano y sin clipping en Gmail.
-  const logoAttachments = whiteLogoInlineAttachments();
+  // Logos (URL pública o CID inline) + firma inline (CID) según configuración.
+  const logoAttachments = emailLogoAttachments();
   const firmaAtt = usePublicEmailLogos() ? null : firmaInlineAttachment(sender.firma, 'firma-usuario');
   const firmante = {
     nombre: sender.name,

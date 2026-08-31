@@ -45,6 +45,7 @@ async function start() {
     console.log('✅ Conectado a PostgreSQL (Neon)');
     await sequelize.sync({ alter: false });
     console.log('✅ Modelos sincronizados');
+    await ensureSchema();
     await ensureAdmin();
     app.listen(env.port, () => {
       console.log(`🚀 API V Grand CRM en http://localhost:${env.port}`);
@@ -52,6 +53,21 @@ async function start() {
   } catch (e) {
     console.error('❌ Error al iniciar:', e.message);
     process.exit(1);
+  }
+}
+
+// Migración idempotente: agrega columnas nuevas si faltan (sync usa alter:false).
+async function ensureSchema() {
+  const { DataTypes } = require('sequelize');
+  const qi = sequelize.getQueryInterface();
+  try {
+    const cols = await qi.describeTable('agreements');
+    if (!cols.tarifas) {
+      await qi.addColumn('agreements', 'tarifas', { type: DataTypes.JSONB, defaultValue: [] });
+      console.log('🧩 Columna agreements.tarifas creada');
+    }
+  } catch (e) {
+    console.warn('⚠ ensureSchema:', e.message);
   }
 }
 

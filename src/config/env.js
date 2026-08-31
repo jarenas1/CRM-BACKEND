@@ -95,6 +95,14 @@ const env = {
     intereses: ['Hospedaje', 'Evento / Salón', 'Convenio corporativo', 'Grupo', 'Boda / Social', 'Otro'],
     tiposInteraccion: ['Llamada', 'Correo', 'WhatsApp', 'Reunión', 'Visita', 'Nota'],
     estadosReserva: ['Pendiente', 'Confirmada', 'Check-in', 'Check-out', 'Cancelada', 'No-show'],
+    tiposHabitacion: [
+      'Sencilla cama King',
+      'Sencilla cama Queen',
+      'Doble Twin',
+      'Suite balcony',
+      'Studio familiar con sofá cama',
+      'Junior suite con vista',
+    ],
   },
 
   itemsConServicio: [

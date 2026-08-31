@@ -13,6 +13,9 @@ const Agreement = sequelize.define('Agreement', {
   cargo: { type: DataTypes.STRING(180) },
   email: { type: DataTypes.STRING(180) },
   telefono: { type: DataTypes.STRING(60) },
+  // Tarifas por tipo de habitación: [{ tipo, valor }]. Reemplaza las 3 tarifas fijas.
+  tarifas: { type: DataTypes.JSONB, defaultValue: [] },
+  // Columnas legadas (se conservan por compatibilidad con convenios antiguos).
   tarifaSencilla: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
   tarifaDoble: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
   tarifaSuite: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
