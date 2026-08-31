@@ -1,6 +1,6 @@
 const env = require('../config/env');
 const { fmtMoneda, fmtFecha, esc } = require('../utils/format');
-const { getLogoDataUri, LOGO_CID } = require('../utils/logo');
+const { getLogoDataUri, emailLogoSrc, usePublicEmailLogos } = require('../utils/logo');
 
 function botonPago() {
   const C = env.colores;
@@ -127,18 +127,21 @@ function reservaEmail(r, numero, firmante = {}, opts = {}) {
   const C = env.colores;
   const H = env.hotel;
   const brass = '#b08d57';
-  // Logos por CID (adjuntos inline) para evitar el clipping de Gmail y que rendericen bien.
-  const logoMainWhite = `cid:${LOGO_CID.vgrandWhite}`;
-  const logoRadWhite = `cid:${LOGO_CID.radissonWhite}`;
+  // Logos: URL pública (prod/Brevo) o CID inline (SMTP local) según configuración.
+  const logoMainWhite = emailLogoSrc('vgrandWhite');
+  const logoRadWhite = emailLogoSrc('radissonWhite');
 
   const codigo = r.codigoReserva || numero;
   const titular = r.titular || '';
   const total = parseFloat(r.total) || 0;
 
-  // La firma va por CID cuando se envía por correo; como data URI solo en vista previa.
-  const firmaSrc = (firmante && firmante.firmaCid)
-    ? `cid:${firmante.firmaCid}`
-    : (firmante && firmante.firmaDataUri) || '';
+  // La firma va por CID (SMTP) o data URI (vista previa). En modo URL pública
+  // (Brevo) se omite la imagen de firma, pues no tiene URL pública; queda en el PDF.
+  const firmaSrc = usePublicEmailLogos()
+    ? ''
+    : (firmante && firmante.firmaCid)
+      ? `cid:${firmante.firmaCid}`
+      : (firmante && firmante.firmaDataUri) || '';
   const firmaImg = firmaSrc
     ? `<img src="${firmaSrc}" alt="Firma" style="display:block;border:0;margin:6px 0;max-height:56px;max-width:220px;height:auto;">`
     : '';
@@ -219,4 +222,128 @@ function reservaEmail(r, numero, firmante = {}, opts = {}) {
     + `</td></tr></table></body></html>`;
 }
 
-module.exports = { cotizacion, convenio, reserva, reservaEmail, shell, botonPago };
+// ─────────────────────────────────────────────────────────────
+// Shell de correo con logos en blanco (CID) — formato de marca
+// compartido para cotización y convenio (mismo look que la reserva).
+// ─────────────────────────────────────────────────────────────
+function emailLogoImg(src, alt, w) {
+  return `<img src="${src}" alt="${esc(alt)}" width="${w}" style="display:inline-block;border:0;max-width:100%;height:auto;vertical-align:middle;">`;
+}
+
+function emailBrandShell({ kicker, greetingTitle, bodyHtml, firmante = {}, closingLine }) {
+  const C = env.colores;
+  const H = env.hotel;
+  const brass = '#b08d57';
+  const logoMainWhite = emailLogoSrc('vgrandWhite');
+  const logoRadWhite = emailLogoSrc('radissonWhite');
+
+  const firmaSrc = usePublicEmailLogos()
+    ? ''
+    : (firmante.firmaCid ? `cid:${firmante.firmaCid}` : (firmante.firmaDataUri || ''));
+  const firmaImg = firmaSrc
+    ? `<img src="${firmaSrc}" alt="Firma" style="display:block;border:0;margin:6px 0;max-height:56px;max-width:220px;height:auto;">`
+    : '';
+  const nombre = firmante.nombre || H.razonSocial;
+  const cargo = firmante.cargo || 'Equipo Comercial';
+
+  return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<style>body{margin:0;padding:0;background:#e9e5dd;}'
+    + '@media only screen and (max-width:620px){.container{width:100%!important;}.px{padding-left:22px!important;padding-right:22px!important;}}</style></head>'
+    + '<body style="margin:0;padding:0;background:#e9e5dd;">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e9e5dd;"><tr><td align="center" style="padding:26px 12px;">'
+    + '<table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #ddd5c7;">'
+
+    // header
+    + `<tr><td style="background:${C.verde};padding:24px 34px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>`
+    + `<td align="left" valign="middle" style="vertical-align:middle;">${emailLogoImg(logoMainWhite, 'V Grand Hotel Medellín', 168)}</td>`
+    + `<td align="right" valign="middle" style="vertical-align:middle;">${emailLogoImg(logoRadWhite, 'Member of Radisson Individuals', 118)}</td>`
+    + '</tr></table></td></tr>'
+    + `<tr><td style="height:3px;background:${brass};line-height:3px;font-size:0;">&nbsp;</td></tr>`
+
+    // título
+    + '<tr><td class="px" style="padding:26px 34px 4px 34px;">'
+    + `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${brass};text-transform:uppercase;">${esc(kicker)}</div>`
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:23px;color:${C.verde};padding-top:6px;">${greetingTitle}</div>`
+    + '</td></tr>'
+
+    // cuerpo
+    + `<tr><td class="px" style="padding:12px 34px 0 34px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:${C.grisTexto};">`
+    + bodyHtml
+    + '</td></tr>'
+
+    // cierre + firma
+    + `<tr><td class="px" style="padding:18px 34px 28px 34px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${C.grisTexto};">`
+    + `<p style="margin:0 0 12px 0;">${esc(closingLine || 'Quedamos atentos a cualquier inquietud. ¡Será un placer atenderle!')}</p>`
+    + '<p style="margin:0;color:#8a857c;font-size:13px;">Cordialmente,</p>'
+    + firmaImg
+    + `<p style="margin:6px 0 0 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:${C.verde};"><strong>${esc(nombre)}</strong></p>`
+    + `<p style="margin:2px 0 0 0;color:#8a857c;font-size:13px;">${esc(cargo)} &middot; ${esc(H.nombre)}</p>`
+    + '</td></tr>'
+
+    // footer
+    + `<tr><td style="background:${C.verdeOscuro};padding:22px 34px;">`
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+    + `<td align="left" valign="middle" style="vertical-align:middle;">${emailLogoImg(logoMainWhite, 'V Grand Hotel Medellín', 140)}</td>`
+    + `<td align="right" valign="middle" style="vertical-align:middle;">${emailLogoImg(logoRadWhite, 'Member of Radisson Individuals', 108)}</td>`
+    + '</tr></table>'
+    + '<div style="height:1px;background:#2f3e38;margin:14px 0;line-height:1px;font-size:0;">&nbsp;</div>'
+    + `<div style="font-family:Georgia,serif;color:${brass};font-size:11px;letter-spacing:3px;">${esc(H.slogan)}</div>`
+    + `<div style="font-family:Arial,Helvetica,sans-serif;color:#b8c2bd;font-size:11px;line-height:1.6;margin-top:6px;">${esc(H.direccion)}<br>Tel.: ${esc(H.whatsapp)} &middot; ${esc(H.emailVentas)} &middot; ${esc(H.web)}</div>`
+    + '</td></tr>'
+
+    + '</table></td></tr></table></body></html>';
+}
+
+function calloutBox(titulo, lineaHtml) {
+  const C = env.colores;
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#faf6ee;border:1px solid #e7dcc6;border-radius:8px;margin-top:6px;"><tr>'
+    + `<td style="padding:14px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${C.grisTexto};line-height:1.5;">`
+    + `<span style="color:#b08d57;font-weight:bold;">&#128206; ${esc(titulo)}</span><br>${lineaHtml}`
+    + '</td></tr></table>';
+}
+
+// Correo de cotización: cuerpo simple + PDF adjunto.
+function cotizacionEmail(data, numero, totales, firmante = {}, opts = {}) {
+  const H = env.hotel;
+  const m = data.moneda || 'COP';
+  const contacto = data.contacto || '';
+  const intro = opts.mensajePersonalizado
+    ? `<p style="margin:0 0 14px 0;">${esc(opts.mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
+    : `<p style="margin:0 0 14px 0;">Gracias por tu interés en <strong>${esc(H.nombreLargo)}</strong>. Adjuntamos la <strong>cotización N.° ${esc(numero)}</strong> para <strong>${esc(data.empresa || 'tu solicitud')}</strong>.</p>`
+      + '<p style="margin:0 0 14px 0;">En el <strong>documento PDF adjunto</strong> encontrarás el detalle completo de servicios, tarifas y condiciones. Puedes descargarlo y conservarlo.</p>';
+  const bodyHtml = intro
+    + calloutBox('Documento adjunto', `Cotización en PDF &middot; N.° <strong>${esc(numero)}</strong> &middot; Total <strong>${fmtMoneda(totales.total, m)}</strong>`)
+    + `<div class="px" style="padding-top:6px;">${botonPago()}</div>`;
+  return emailBrandShell({
+    kicker: 'Cotización',
+    greetingTitle: `Hola${contacto ? ' ' + esc(contacto) : ''}`,
+    bodyHtml,
+    firmante,
+  });
+}
+
+// Correo de convenio: cuerpo simple + PDF adjunto.
+function convenioEmail(data, numero, firmante = {}, opts = {}) {
+  const H = env.hotel;
+  const contacto = data.contacto || '';
+  const intro = opts.mensajePersonalizado
+    ? `<p style="margin:0 0 14px 0;">${esc(opts.mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
+    : `<p style="margin:0 0 14px 0;">Es un gusto presentar nuestra propuesta de <strong>convenio corporativo</strong> para <strong>${esc(data.empresa || 'tu empresa')}</strong> con <strong>${esc(H.nombreLargo)}</strong>.</p>`
+      + '<p style="margin:0 0 14px 0;">En el <strong>documento PDF adjunto</strong> encontrarás tarifas preferenciales, beneficios, condiciones y cláusulas del convenio.</p>';
+  const bodyHtml = intro
+    + calloutBox('Documento adjunto', `Convenio corporativo en PDF &middot; N.° <strong>${esc(numero)}</strong>`)
+    + `<div class="px" style="padding-top:6px;">${botonPago()}</div>`;
+  return emailBrandShell({
+    kicker: 'Convenio corporativo',
+    greetingTitle: `Hola${contacto ? ' ' + esc(contacto) : ''}`,
+    bodyHtml,
+    firmante,
+  });
+}
+
+module.exports = {
+  cotizacion, convenio, reserva,
+  reservaEmail, cotizacionEmail, convenioEmail,
+  shell, botonPago,
+};

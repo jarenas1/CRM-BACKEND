@@ -1,4 +1,5 @@
 require('express-async-errors');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -26,6 +27,13 @@ app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use(morgan('dev'));
 
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'vgrand-crm', time: new Date() }));
+
+// Logos de marca públicos (para incrustarlos por URL en los correos).
+app.use('/brand', express.static(path.join(__dirname, 'assets'), {
+  maxAge: '7d',
+  immutable: true,
+}));
+
 app.use('/api', routes);
 
 app.use(notFound);

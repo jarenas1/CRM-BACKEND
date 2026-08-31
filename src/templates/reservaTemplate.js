@@ -66,8 +66,8 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
   const detailRow = (label, value, last) => {
     const b = last ? '' : `border-bottom:1px solid ${CO.line};`;
     return '<tr>'
-      + `<td width="42%" style="padding:9px 0;${b}color:${CO.muted};font-size:12px;letter-spacing:.5px;text-transform:uppercase;vertical-align:top;">${label}</td>`
-      + `<td width="58%" style="padding:9px 0;${b}text-align:right;vertical-align:top;">${value}</td>`
+      + `<td width="42%" style="padding:5px 0;${b}color:${CO.muted};font-size:12px;letter-spacing:.5px;text-transform:uppercase;vertical-align:top;">${label}</td>`
+      + `<td width="58%" style="padding:5px 0;${b}text-align:right;vertical-align:top;">${value}</td>`
       + '</tr>';
   };
 
@@ -81,8 +81,8 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
 
   // Firma guardada en el perfil del usuario (firmante.firmaDataUri)
   const firmaBlock = firmante.firmaDataUri
-    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="display:block;border:0;margin:12px 0 6px 0;max-height:64px;max-width:280px;height:auto;">`
-    : '<div style="height:14px;line-height:14px;font-size:0;">&nbsp;</div>';
+    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="display:block;border:0;margin:8px 0 4px 0;max-height:54px;max-width:260px;height:auto;">`
+    : '<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>';
   const firmaNombre = firmante.nombre || H.razonSocial;
   const firmaCargo = firmante.cargo || 'Líder de Reservas';
 
@@ -93,31 +93,31 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
     + '@media print{body{background:#fff;}}</style></head>'
     + '<body style="margin:0;padding:0;background:#e9e5dd;">'
     + `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#e9e5dd;font-size:1px;">Su reserva en V Grand Hotel está confirmada &middot; Código ${esc(codigo)}</div>`
-    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e9e5dd;"><tr><td align="center" style="padding:28px 12px;">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#e9e5dd;"><tr><td align="center" style="padding:14px 12px;">'
 
     + `<table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:${CO.paper};border:1px solid #ddd5c7;">`
 
     // header (fondo claro, logos oscuros)
-    + '<tr><td style="background:#ffffff;padding:24px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+    + '<tr><td style="background:#ffffff;padding:16px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
     + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMain, 'V Grand Hotel Medellín', 180)}</td>`
     + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRad, 'Member of Radisson Individuals', 120)}</td>`
     + '</tr></table></td></tr>'
     + `<tr><td style="height:3px;background:${CO.brass};line-height:3px;font-size:0;">&nbsp;</td></tr>`
 
     // título
-    + '<tr><td class="px" style="padding:30px 40px 8px 40px;">'
+    + '<tr><td class="px" style="padding:18px 40px 4px 40px;">'
     + `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${CO.brass};text-transform:uppercase;">Confirmación de reserva</div>`
-    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:${CO.green2};padding-top:6px;">Código N.° ${esc(codigo)}</div>`
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:${CO.green2};padding-top:5px;">Código N.° ${esc(codigo)}</div>`
     + '</td></tr>'
 
     // saludo + intro
-    + `<tr><td class="px" style="padding:14px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:${CO.ink};">`
-    + `<p style="margin:0 0 14px 0;">${greeting}</p>`
+    + `<tr><td class="px" style="padding:10px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:${CO.ink};">`
+    + `<p style="margin:0 0 8px 0;">${greeting}</p>`
     + `<p style="margin:0;">${esc(intro)}</p>`
     + '</td></tr>'
 
     // datos de la reserva
-    + '<tr><td class="px" style="padding:26px 40px 0 40px;">'
+    + '<tr><td class="px" style="padding:14px 40px 0 40px;">'
     + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;border-bottom:2px solid ${CO.brass};padding-bottom:6px;margin-bottom:8px;">Datos de la reserva</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${CO.ink};">`
     + detailRow('Titular', esc(titular))
@@ -133,9 +133,9 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
     + '</table></td></tr>'
 
     // valor de la estadía
-    + '<tr><td class="px" style="padding:26px 40px 0 40px;">'
-    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border:1px solid ${CO.creamLine};"><tr><td style="padding:20px 22px;">`
-    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;margin-bottom:12px;">Valor de la estadía</div>`
+    + '<tr><td class="px" style="padding:14px 40px 0 40px;">'
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border:1px solid ${CO.creamLine};"><tr><td style="padding:13px 16px;">`
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;margin-bottom:8px;">Valor de la estadía</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${CO.ink};">`
     + `<tr><td style="padding:4px 0;">Tarifa &middot; ${valLine}</td><td style="padding:4px 0;text-align:right;white-space:nowrap;">${fmtMoneda(subtotal, 'COP')}</td></tr>`
     + (aplicaIva
@@ -146,28 +146,28 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
     + `<td style="padding:2px 0;text-align:right;font-family:Georgia,serif;font-size:18px;color:${CO.green2};white-space:nowrap;"><strong>${fmtMoneda(total, 'COP')}</strong></td></tr>`
     + (aplicaIva ? `<tr><td colspan="2" style="padding-top:2px;font-size:12px;color:${CO.muted};">IVA incluido</td></tr>` : '')
     + '</table></td></tr></table>'
-    + `<p style="margin:12px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.55;color:${CO.muted};"><strong style="color:#6f6a60;">Nota sobre el IVA:</strong> ${esc(ivaNote)}</p>`
+    + `<p style="margin:7px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;line-height:1.45;color:${CO.muted};"><strong style="color:#6f6a60;">Nota sobre el IVA:</strong> ${esc(ivaNote)}</p>`
     + '</td></tr>'
 
     // horarios (se omite la sección de capacidad por tipo de habitación)
-    + '<tr><td class="px" style="padding:26px 40px 0 40px;">'
-    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;border-bottom:2px solid ${CO.brass};padding-bottom:6px;margin-bottom:10px;">Horarios</div>`
+    + '<tr><td class="px" style="padding:14px 40px 0 40px;">'
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;border-bottom:2px solid ${CO.brass};padding-bottom:5px;margin-bottom:7px;">Horarios</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${CO.ink};">`
-    + `<tr><td width="120" style="padding:5px 0;color:${CO.muted};vertical-align:top;">Desayuno</td><td style="padding:5px 0;vertical-align:top;">Lunes a viernes de ${esc(bWeek)}<br>Sábados, domingos y festivos de ${esc(bWeekend)}</td></tr>`
-    + `<tr><td style="padding:5px 0;color:${CO.muted};vertical-align:top;">Check-in</td><td style="padding:5px 0;vertical-align:top;">${esc(ciTime)}</td></tr>`
-    + `<tr><td style="padding:5px 0;color:${CO.muted};vertical-align:top;">Check-out</td><td style="padding:5px 0;vertical-align:top;">${esc(coTime)}</td></tr>`
+    + `<tr><td width="120" style="padding:3px 0;color:${CO.muted};vertical-align:top;">Desayuno</td><td style="padding:3px 0;vertical-align:top;">Lunes a viernes de ${esc(bWeek)}<br>Sábados, domingos y festivos de ${esc(bWeekend)}</td></tr>`
+    + `<tr><td style="padding:3px 0;color:${CO.muted};vertical-align:top;">Check-in</td><td style="padding:3px 0;vertical-align:top;">${esc(ciTime)}</td></tr>`
+    + `<tr><td style="padding:3px 0;color:${CO.muted};vertical-align:top;">Check-out</td><td style="padding:3px 0;vertical-align:top;">${esc(coTime)}</td></tr>`
     + '</table></td></tr>'
 
     // plataforma virtual / pago
-    + `<tr><td class="px" style="padding:24px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:${CO.ink};">`
+    + `<tr><td class="px" style="padding:14px 40px 0 40px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.5;color:${CO.ink};">`
     + '<strong>Plataforma virtual:</strong> puede pagar o gestionar su reserva en línea a través del siguiente enlace: '
     + `<a href="${esc(H.linkPago)}" style="color:${CO.brass};font-weight:bold;text-decoration:underline;">pagar / gestionar mi reserva</a>. `
     + '<span style="color:' + CO.muted + ';">Pago seguro vía Wompi &middot; tarjeta, PSE o link.</span>'
     + '</td></tr>'
 
     // información importante
-    + '<tr><td class="px" style="padding:26px 40px 0 40px;">'
-    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;border-bottom:2px solid ${CO.brass};padding-bottom:6px;margin-bottom:10px;">Información importante</div>`
+    + '<tr><td class="px" style="padding:14px 40px 0 40px;">'
+    + `<div style="font-family:Georgia,'Times New Roman',serif;font-size:13px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;border-bottom:2px solid ${CO.brass};padding-bottom:5px;margin-bottom:7px;">Información importante</div>`
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.6;color:${CO.ink};">`
     + infoItem('Cancelaciones', cancelPol)
     + infoItem('No-show', noshowPol)
@@ -176,28 +176,28 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
 
     // observaciones (opcional)
     + (data.observaciones
-      ? '<tr><td class="px" style="padding:22px 40px 0 40px;">'
-        + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border-left:3px solid ${CO.green2};"><tr><td style="padding:12px 16px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.6;color:${CO.ink};"><strong>Observaciones:</strong> ${nl2br(data.observaciones)}</td></tr></table>`
+      ? '<tr><td class="px" style="padding:12px 40px 0 40px;">'
+        + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border-left:3px solid ${CO.green2};"><tr><td style="padding:10px 14px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:${CO.ink};"><strong>Observaciones:</strong> ${nl2br(data.observaciones)}</td></tr></table>`
         + '</td></tr>'
       : '')
 
     // cierre + firma
-    + `<tr><td class="px" style="padding:24px 40px 32px 40px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:${CO.ink};">`
-    + `<p style="margin:0 0 18px 0;">${esc(closing)}</p>`
-    + `<p style="margin:0;color:${CO.muted};font-size:14px;">Cordialmente,</p>`
+    + `<tr><td class="px" style="padding:14px 40px 18px 40px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:${CO.ink};">`
+    + `<p style="margin:0 0 10px 0;">${esc(closing)}</p>`
+    + `<p style="margin:0;color:${CO.muted};font-size:13px;">Cordialmente,</p>`
     + firmaBlock
     + `<p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:16px;color:${CO.green2};"><strong>${esc(firmaNombre)}</strong></p>`
     + `<p style="margin:2px 0 0 0;color:${CO.muted};font-size:13px;">${esc(firmaCargo)} &middot; V Grand Hotel</p>`
     + '</td></tr>'
 
     // footer (verde oscuro, logos en blanco directamente sobre el verde)
-    + `<tr><td style="background:${CO.green};padding:26px 40px;">`
+    + `<tr><td style="background:${CO.green};padding:16px 40px;">`
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
     + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMainWhite, 'V Grand Hotel Medellín', 150)}</td>`
     + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRadWhite, 'Member of Radisson Individuals', 120)}</td>`
     + '</tr></table>'
-    + '<div style="height:1px;background:#2f3e38;margin:16px 0;line-height:1px;font-size:0;">&nbsp;</div>'
-    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.7;color:#b8c2bd;">'
+    + '<div style="height:1px;background:#2f3e38;margin:12px 0;line-height:1px;font-size:0;">&nbsp;</div>'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#b8c2bd;">'
     + `<tr><td>${nl2br(H.direccion)}</td></tr>`
     + `<tr><td>Tel.: ${esc(H.whatsapp)} &nbsp;&middot;&nbsp; Correo: ${esc(H.emailReservas)} &nbsp;&middot;&nbsp; Web: ${esc(H.web)}</td></tr>`
     + '</table></td></tr>'
@@ -205,7 +205,7 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
     + '</table>'
 
     + '<table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;"><tr>'
-    + `<td style="padding:16px 40px;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:1.5;color:#9a948a;text-align:center;">Este mensaje contiene la confirmación de su reserva. Por favor, conserve el código N.° ${esc(codigo)} para cualquier gestión.</td>`
+    + `<td style="padding:10px 40px;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:1.4;color:#9a948a;text-align:center;">Este mensaje contiene la confirmación de su reserva. Por favor, conserve el código N.° ${esc(codigo)} para cualquier gestión.</td>`
     + '</tr></table>'
 
     + '</td></tr></table></body></html>';

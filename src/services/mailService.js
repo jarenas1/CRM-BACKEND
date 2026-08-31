@@ -1,9 +1,8 @@
 const nodemailer = require('nodemailer');
 const env = require('../config/env');
 const tplEmail = require('../templates/emailTemplates');
-const { fmtMoneda, esc } = require('../utils/format');
 const userRepo = require('../repositories/userRepository');
-const { whiteLogoInlineAttachments } = require('../utils/logo');
+const { emailLogoAttachments, usePublicEmailLogos } = require('../utils/logo');
 const quotationService = require('./quotationService');
 const agreementService = require('./agreementService');
 const reservationService = require('./reservationService');
@@ -35,14 +34,27 @@ function getTransporter() {
     port: env.smtp.port,
     secure: env.smtp.secure,
     auth: { user: env.smtp.user, pass: env.smtp.pass },
+    // Fallar rápido y claro en vez de colgarse si el host bloquea el puerto SMTP.
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000,
   });
   return transporter;
 }
 
 async function verify() {
+  if (env.emailProvider === 'brevo') {
+    if (!env.brevoApiKey) throw new Error('Brevo no configurado: define BREVO_API_KEY');
+    const resp = await fetch('https://api.brevo.com/v3/account', {
+      headers: { accept: 'application/json', 'api-key': env.brevoApiKey },
+    });
+    if (!resp.ok) throw new Error(`Brevo ${resp.status}: ${await resp.text()}`);
+    const acc = await resp.json();
+    return { ok: true, provider: 'brevo', email: acc.email, from: env.smtp.from };
+  }
   const t = getTransporter();
   await t.verify();
-  return { ok: true, host: env.smtp.host, port: env.smtp.port, user: env.smtp.user };
+  return { ok: true, provider: 'smtp', host: env.smtp.host, port: env.smtp.port, user: env.smtp.user };
 }
 
 function buildCcList(senderEmail, extraCc) {
@@ -54,20 +66,6 @@ function buildCcList(senderEmail, extraCc) {
   }
   // únicos
   return [...new Set(list.map(s => s.toLowerCase()))];
-}
-
-function noReplyBanner() {
-  const C = env.colores;
-  return `
-  <div style="margin-top:18px;padding:12px 14px;background:#f1ede0;border-left:3px solid ${C.dorado};font-size:11.5px;color:#7d7060;line-height:1.5;border-radius:6px;">
-    <strong>⚠ Este correo es informativo y no requiere respuesta.</strong><br>
-    Para cualquier consulta puede escribir a <a href="mailto:${env.hotel.emailVentas}" style="color:${C.verde};">${env.hotel.emailVentas}</a> o por WhatsApp al <strong>${env.hotel.whatsapp}</strong>.
-  </div>`;
-}
-
-function saludo(senderName, contactName, intro) {
-  return `<p style="margin-top:0;">Hola${contactName ? ' <strong>' + esc(contactName) + '</strong>' : ''},</p>
-          <p>Soy <strong>${esc(senderName || 'el equipo comercial')}</strong> de <strong>${env.hotel.nombreLargo}</strong> y ${intro}</p>`;
 }
 
 async function getSender(userId) {
@@ -93,19 +91,20 @@ async function sendQuotation({ numero, user, extraCc, mensajePersonalizado }) {
     subtotal: parseFloat(q.subtotal), servicio: parseFloat(q.impuestoServicio),
     iva: parseFloat(q.iva), total: parseFloat(q.total),
   };
-  const firmante = { nombre: sender.name, cargo: sender.cargo, firmaDataUri: sender.firma };
+  const firmaAtt = usePublicEmailLogos() ? null : firmaInlineAttachment(sender.firma, 'firma-usuario');
+  const firmante = { nombre: sender.name, cargo: sender.cargo, firmaCid: firmaAtt ? 'firma-usuario' : null };
 
-  const intro = mensajePersonalizado
-    ? `<p>${esc(mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
-    : `te envío la <strong>cotización N° ${esc(numero)}</strong> que preparamos para <strong>${esc(q.empresa)}</strong>. En el PDF adjunto encontrarás el detalle completo de servicios, tarifas y condiciones.`;
+  const html = tplEmail.cotizacionEmail(q, numero, totales, firmante, { mensajePersonalizado });
 
-  const contenido =
-    saludo(sender.name, q.contacto, intro) +
-    tplEmailBoxCotizacion(q, totales) +
-    botonPagar() +
-    noReplyBanner();
-
-  const html = tplEmail.shell(`COTIZACIÓN N° ${numero}`, contenido, firmante);
+  const attachments = [
+    {
+      filename: `${numero} - ${q.empresa || 'cotizacion'}.pdf`,
+      content: pdfBuffer,
+      contentType: 'application/pdf',
+    },
+    ...emailLogoAttachments(),
+  ];
+  if (firmaAtt) attachments.push(firmaAtt);
 
   return enviar({
     to: q.email,
@@ -113,11 +112,7 @@ async function sendQuotation({ numero, user, extraCc, mensajePersonalizado }) {
     subject: `Cotización ${numero} — ${env.hotel.nombre}`,
     html,
     senderName: sender.name,
-    attachments: [{
-      filename: `${numero} - ${q.empresa || 'cotizacion'}.pdf`,
-      content: pdfBuffer,
-      contentType: 'application/pdf',
-    }],
+    attachments,
   });
 }
 
@@ -127,18 +122,20 @@ async function sendAgreement({ numero, user, extraCc, mensajePersonalizado }) {
   if (!a.email) throw new Error('El convenio no tiene email destinatario');
 
   const pdfBuffer = await agreementService.renderPdf(numero);
-  const firmante = { nombre: sender.name, cargo: sender.cargo, firmaDataUri: sender.firma };
-  const intro = mensajePersonalizado
-    ? `<p>${esc(mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
-    : `te presento nuestra propuesta de <strong>convenio corporativo N° ${esc(numero)}</strong> para <strong>${esc(a.empresa)}</strong>, con tarifas preferenciales para tus colaboradores.`;
+  const firmaAtt = usePublicEmailLogos() ? null : firmaInlineAttachment(sender.firma, 'firma-usuario');
+  const firmante = { nombre: sender.name, cargo: sender.cargo, firmaCid: firmaAtt ? 'firma-usuario' : null };
 
-  const contenido =
-    saludo(sender.name, a.contacto, intro) +
-    tplEmailBoxConvenio(a) +
-    botonPagar() +
-    noReplyBanner();
+  const html = tplEmail.convenioEmail(a, numero, firmante, { mensajePersonalizado });
 
-  const html = tplEmail.shell(`CONVENIO CORPORATIVO N° ${numero}`, contenido, firmante);
+  const attachments = [
+    {
+      filename: `${numero} - Convenio - ${a.empresa || 'corporativo'}.pdf`,
+      content: pdfBuffer,
+      contentType: 'application/pdf',
+    },
+    ...emailLogoAttachments(),
+  ];
+  if (firmaAtt) attachments.push(firmaAtt);
 
   return enviar({
     to: a.email,
@@ -146,11 +143,7 @@ async function sendAgreement({ numero, user, extraCc, mensajePersonalizado }) {
     subject: `Convenio Corporativo ${numero} — ${env.hotel.nombre}`,
     html,
     senderName: sender.name,
-    attachments: [{
-      filename: `${numero} - Convenio - ${a.empresa || 'corporativo'}.pdf`,
-      content: pdfBuffer,
-      contentType: 'application/pdf',
-    }],
+    attachments,
   });
 }
 
@@ -163,7 +156,7 @@ async function sendReservation({ numero, user, extraCc, mensajePersonalizado }) 
 
   // Logos inline (CID) + firma inline (CID) → HTML liviano y sin clipping en Gmail.
   const logoAttachments = whiteLogoInlineAttachments();
-  const firmaAtt = firmaInlineAttachment(sender.firma, 'firma-usuario');
+  const firmaAtt = usePublicEmailLogos() ? null : firmaInlineAttachment(sender.firma, 'firma-usuario');
   const firmante = {
     nombre: sender.name,
     cargo: sender.cargo,
@@ -193,8 +186,11 @@ async function sendReservation({ numero, user, extraCc, mensajePersonalizado }) 
 }
 
 async function enviar({ to, cc, subject, html, attachments, senderName }) {
-  const t = getTransporter();
   const fromName = senderName ? `${senderName} · ${env.hotel.nombre}` : env.smtp.fromName;
+  if (env.emailProvider === 'brevo') {
+    return enviarBrevo({ fromName, to, cc, subject, html, attachments });
+  }
+  const t = getTransporter();
   const info = await t.sendMail({
     from: { name: fromName, address: env.smtp.from },
     to,
@@ -211,47 +207,51 @@ async function enviar({ to, cc, subject, html, attachments, senderName }) {
   return { ok: true, messageId: info.messageId, accepted: info.accepted, rejected: info.rejected, cc };
 }
 
-// ─── helpers de plantillas ───
-function botonPagar() {
-  const C = env.colores;
-  return `
-  <table style="width:100%;margin:18px 0;border-collapse:collapse;"><tr><td style="text-align:center;">
-    <a href="${env.hotel.linkPago}" target="_blank" style="display:inline-block;background:${C.dorado};color:${C.verdeOscuro};font-weight:bold;text-decoration:none;padding:13px 34px;border-radius:8px;font-size:15px;letter-spacing:.5px;">Pagar ahora en línea</a>
-    <div style="font-size:11px;color:#999;margin-top:7px;">Pago seguro vía Wompi · tarjeta, PSE o link</div>
-  </td></tr></table>`;
-}
+// Envío vía API HTTP de Brevo (funciona donde el SMTP saliente está bloqueado, p. ej. Render).
+async function enviarBrevo({ fromName, to, cc, subject, html, attachments }) {
+  if (!env.brevoApiKey) {
+    throw new Error('Brevo no configurado: define BREVO_API_KEY en el entorno');
+  }
+  const toList = (Array.isArray(to) ? to : [to])
+    .filter(Boolean).map((email) => ({ email }));
+  const ccList = (cc || []).filter(Boolean).map((email) => ({ email }));
 
-function tplEmailBoxCotizacion(q, totales) {
-  const C = env.colores;
-  const m = q.moneda || 'COP';
-  return `
-  <table style="width:100%;background:${C.crema};border-left:4px solid ${C.dorado};margin:18px 0;border-collapse:collapse;border-radius:8px;overflow:hidden;">
-    <tr><td style="padding:16px 18px;">
-      <div style="font-size:11px;color:${C.dorado};letter-spacing:1px;">TOTAL COTIZACIÓN ${m}</div>
-      <div style="font-size:24px;color:${C.verde};font-weight:bold;margin-top:2px;">${fmtMoneda(totales.total, m)}</div>
-      <div style="font-size:12.5px;color:${C.grisTexto};margin-top:6px;">
-        Tipo: <strong>${esc(q.tipoCotizacion || 'Hospedaje')}</strong>
-        ${q.fechaCaducidad ? ` · Válida hasta: <strong>${q.fechaCaducidad}</strong>` : ''}
-      </div>
-    </td></tr>
-  </table>`;
-}
+  // Convierte los adjuntos de nodemailer al formato de Brevo ({ name, content(base64) }).
+  const brevoAtt = (attachments || []).map((a) => {
+    let buf = a.content;
+    if (typeof buf === 'string') buf = Buffer.from(buf);
+    else if (buf && !Buffer.isBuffer(buf)) buf = Buffer.from(buf);
+    else if (!buf && a.path) buf = require('fs').readFileSync(a.path);
+    return buf ? { name: a.filename || 'adjunto', content: buf.toString('base64') } : null;
+  }).filter(Boolean);
 
-function tplEmailBoxConvenio(a) {
-  const C = env.colores;
-  return `
-  <table style="width:100%;border-collapse:collapse;margin:18px 0;font-size:13px;">
-    <tr style="background:${C.verde};color:#fff;">
-      <td style="padding:9px;text-align:center;">Sencilla</td>
-      <td style="padding:9px;text-align:center;">Doble</td>
-      <td style="padding:9px;text-align:center;">Junior Suite</td>
-    </tr>
-    <tr style="background:${C.crema};">
-      <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(a.tarifaSencilla, 'COP')}</td>
-      <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(a.tarifaDoble, 'COP')}</td>
-      <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(a.tarifaSuite, 'COP')}</td>
-    </tr>
-  </table>`;
+  const body = {
+    sender: { name: fromName, email: env.smtp.from },
+    to: toList,
+    subject,
+    htmlContent: html,
+    replyTo: { email: env.smtp.replyTo },
+    headers: { 'X-Auto-Response-Suppress': 'All', 'Auto-Submitted': 'auto-generated' },
+  };
+  if (ccList.length) body.cc = ccList;
+  if (brevoAtt.length) body.attachment = brevoAtt;
+
+  const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'api-key': env.brevoApiKey,
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await resp.text();
+  if (!resp.ok) {
+    throw new Error(`Brevo ${resp.status}: ${text || resp.statusText}`);
+  }
+  let data = {};
+  try { data = JSON.parse(text); } catch (e) { /* respuesta sin cuerpo JSON */ }
+  return { ok: true, messageId: data.messageId, accepted: toList.map((t) => t.email), cc };
 }
 
 module.exports = {

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../config/env');
 
 const cache = {};
 
@@ -51,22 +52,34 @@ const LOGO_CID = {
   radissonWhite: 'logo-radisson-white',
 };
 
+const WHITE_LOGO_FILES = {
+  vgrandWhite: 'logo-vgrand-white.png',
+  radissonWhite: 'logo-radisson-white.png',
+};
+
 // Adjuntos inline (nodemailer) con los logos blancos para fondos oscuros.
 function whiteLogoInlineAttachments() {
   return [
-    {
-      filename: 'logo-vgrand-white.png',
-      path: assetPath('logo-vgrand-white.png'),
-      cid: LOGO_CID.vgrandWhite,
-      contentDisposition: 'inline',
-    },
-    {
-      filename: 'logo-radisson-white.png',
-      path: assetPath('logo-radisson-white.png'),
-      cid: LOGO_CID.radissonWhite,
-      contentDisposition: 'inline',
-    },
+    { filename: WHITE_LOGO_FILES.vgrandWhite, path: assetPath(WHITE_LOGO_FILES.vgrandWhite), cid: LOGO_CID.vgrandWhite, contentDisposition: 'inline' },
+    { filename: WHITE_LOGO_FILES.radissonWhite, path: assetPath(WHITE_LOGO_FILES.radissonWhite), cid: LOGO_CID.radissonWhite, contentDisposition: 'inline' },
   ];
+}
+
+// ¿Servir los logos del correo por URL pública? (recomendado en prod/Brevo).
+function usePublicEmailLogos() {
+  return !!env.publicBaseUrl;
+}
+
+// src del logo para el HTML del correo: URL pública si hay PUBLIC_BASE_URL,
+// de lo contrario referencia CID (adjunto inline, modo SMTP local).
+function emailLogoSrc(which) {
+  if (usePublicEmailLogos()) return `${env.publicBaseUrl}/brand/${WHITE_LOGO_FILES[which]}`;
+  return `cid:${LOGO_CID[which]}`;
+}
+
+// Adjuntos de logos a incluir: ninguno si van por URL; los CID si van inline.
+function emailLogoAttachments() {
+  return usePublicEmailLogos() ? [] : whiteLogoInlineAttachments();
 }
 
 module.exports = {
@@ -78,4 +91,7 @@ module.exports = {
   assetPath,
   LOGO_CID,
   whiteLogoInlineAttachments,
+  usePublicEmailLogos,
+  emailLogoSrc,
+  emailLogoAttachments,
 };

@@ -22,6 +22,14 @@ const env = {
     cargo: process.env.ADMIN_CARGO || 'Director de Trade Marketing',
   },
 
+  // Proveedor de envío de correo: 'smtp' (nodemailer/Gmail, ideal local) o
+  // 'brevo' (API HTTP por 443, necesario en hosts que bloquean SMTP como Render).
+  emailProvider: (process.env.EMAIL_PROVIDER || 'smtp').toLowerCase(),
+  brevoApiKey: process.env.BREVO_API_KEY || '',
+  // URL pública del backend (sin barra final). Si está definida, los logos de los
+  // correos se sirven por URL (recomendado en producción/Brevo) en vez de CID.
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/+$/, ''),
+
   smtp: (() => {
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = parseInt(process.env.SMTP_PORT || '465', 10);
@@ -33,9 +41,11 @@ const env = {
       host,
       port,
       secure,
-      user: process.env.SMTP_USER || '',
-      pass: process.env.SMTP_PASS || '',
-      from: process.env.SMTP_FROM || process.env.SMTP_USER || '',
+      user: (process.env.SMTP_USER || '').trim(),
+      // Las App Passwords de Google se muestran con espacios pero se usan SIN ellos.
+      // Quitamos cualquier espacio para evitar fallos de autenticación por copiado.
+      pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
+      from: (process.env.SMTP_FROM || process.env.SMTP_USER || '').trim(),
       fromName: process.env.SMTP_FROM_NAME || 'V Grand Hotel Medellín',
       replyTo: process.env.SMTP_REPLY_TO || 'reservas@v-grandhotels.com',
       ccFijo: process.env.EMAIL_CC_FIJO || 'juanjoarenas1218@gmail.com',
