@@ -81,7 +81,7 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
 
   // Firma guardada en el perfil del usuario (firmante.firmaDataUri)
   const firmaBlock = firmante.firmaDataUri
-    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="display:block;border:0;margin:8px 0 4px 0;max-height:54px;max-width:260px;height:auto;">`
+    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="display:block;border:0;margin:8px 0 4px 0;max-height:108px;max-width:480px;height:auto;">`
     : '<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>';
   const firmaNombre = firmante.nombre || H.razonSocial;
   const firmaCargo = firmante.cargo || 'Líder de Reservas';

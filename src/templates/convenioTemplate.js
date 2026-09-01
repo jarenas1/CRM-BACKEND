@@ -20,7 +20,7 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
   const sec = `style="font-family:Georgia,'Times New Roman',serif;font-size:12px;letter-spacing:1px;color:${CO.green2};text-transform:uppercase;font-weight:bold;margin:16px 0 6px;border-bottom:2px solid ${CO.brass};padding-bottom:4px;"`;
   const li = 'style="margin:0 0 6px;font-size:10px;line-height:1.55;text-align:justify;"';
   const firmaImg = firmante.firmaDataUri
-    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="max-height:52px;max-width:210px;display:block;margin:0 auto 4px;border:0;">`
+    ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="max-height:104px;max-width:280px;display:block;margin:0 auto 4px;border:0;">`
     : '<div style="height:42px;"></div>';
 
   const metaHtml = `N.° <strong style="color:${CO.green2};">${esc(numero)}</strong><br>Medellín, ${fecha}`;
@@ -125,11 +125,11 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
     + `<div style="text-align:center;font-size:11px;margin-top:22px;letter-spacing:3px;color:${CO.green2};font-weight:bold;">DE COMÚN ACUERDO</div>`
     + '<table style="width:100%;margin-top:22px;font-family:Arial,Helvetica,sans-serif;font-size:10px;border-collapse:collapse;"><tr>'
     + '<td style="width:50%;text-align:center;padding:0 20px;vertical-align:bottom;">'
-    + `<div style="min-height:60px;">${firmaImg}</div>`
+    + `<div style="min-height:110px;">${firmaImg}</div>`
     + `<div style="border-top:1px solid ${CO.ink};padding-top:7px;"><span style="font-size:9px;color:${CO.brass};letter-spacing:2px;">ELABORA</span><br>`
     + `<strong>${esc(firmante.nombre || H.razonSocial)}</strong><br>${esc(firmante.cargo || 'Equipo Comercial')}</div></td>`
     + '<td style="width:50%;text-align:center;padding:0 20px;vertical-align:bottom;">'
-    + '<div style="min-height:60px;"></div>'
+    + '<div style="min-height:110px;"></div>'
     + `<div style="border-top:1px solid ${CO.ink};padding-top:7px;"><span style="font-size:9px;color:${CO.brass};letter-spacing:2px;">ACEPTA</span><br><br>`
     + `<strong>${esc(data.contacto) || '________________________'}</strong><br>${esc(data.cargo) || '&nbsp;'}<br><strong>${esc(data.empresa) || '&nbsp;'}</strong></div></td>`
     + '</tr></table>';

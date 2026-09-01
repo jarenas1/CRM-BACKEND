@@ -79,18 +79,19 @@ function convenio(data, numero, firmante) {
     ? `<p>${esc(data.mensajePersonalizado).replace(/\n/g, '<br>')}</p>`
     : `<p style="margin-top:0;">Estimado/a <strong>${esc(data.contacto) || 'cliente'}</strong>,</p>
        <p>Es un gusto presentar nuestra propuesta de <strong>convenio corporativo</strong> para <strong>${esc(data.empresa)}</strong>.</p>`;
+  const filasTarifa = (Array.isArray(data.tarifas) ? data.tarifas : [])
+    .filter((t) => t && t.tipo)
+    .map((t) => `<tr>
+        <td style="padding:9px 12px;border-bottom:1px solid ${C.linea};">${esc(t.tipo)}</td>
+        <td style="padding:9px 12px;border-bottom:1px solid ${C.linea};text-align:right;font-weight:bold;color:${C.verde};">${fmtMoneda(t.valor, 'COP')}</td>
+      </tr>`).join('');
   const tabla = `
     <table style="width:100%;border-collapse:collapse;margin:18px 0;font-size:13px;">
       <tr style="background:${C.verde};color:#fff;">
-        <td style="padding:9px;text-align:center;">Sencilla</td>
-        <td style="padding:9px;text-align:center;">Doble</td>
-        <td style="padding:9px;text-align:center;">Junior Suite</td>
+        <td style="padding:9px 12px;text-align:left;">Tipo de habitación</td>
+        <td style="padding:9px 12px;text-align:right;">Tarifa (COP / noche)</td>
       </tr>
-      <tr style="background:${C.crema};">
-        <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(data.tarifaSencilla, 'COP')}</td>
-        <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(data.tarifaDoble, 'COP')}</td>
-        <td style="padding:12px;text-align:center;font-weight:bold;color:${C.verde};font-size:15px;">${fmtMoneda(data.tarifaSuite, 'COP')}</td>
-      </tr>
+      ${filasTarifa}
     </table>
     <p style="font-size:12.5px;"><strong>Vigencia hasta el ${vig}.</strong> Tarifas COP por habitación/noche, no incluyen IVA (19%). Incluyen desayuno buffet, wifi, gimnasio y parqueadero en cortesía.</p>
     ${botonPago()}
