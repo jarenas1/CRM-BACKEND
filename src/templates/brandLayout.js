@@ -34,13 +34,13 @@ function logoImg(src, alt, w, dark) {
 function pdfHeader({ kicker = '', title = '', metaHtml = '' } = {}) {
   const logoMain = getMainLogoDataUri();
   const logoRad = getRadissonLogoDataUri();
-  return '<tr><td style="background:#ffffff;padding:14px 40px;">'
+  return '<tr><td style="background:#ffffff;padding:6px 40px;">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
-    + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMain, 'V Grand Hotel Medellín', 175)}</td>`
-    + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRad, 'Member of Radisson Individuals', 118)}</td>`
+    + `<td align="left" valign="middle" style="vertical-align:middle;">${logoImg(logoMain, 'V Grand Hotel Medellín', 118)}</td>`
+    + `<td align="right" valign="middle" style="vertical-align:middle;">${logoImg(logoRad, 'Member of Radisson Individuals', 84)}</td>`
     + '</tr></table></td></tr>'
     + `<tr><td style="height:3px;background:${CO.brass};line-height:3px;font-size:0;">&nbsp;</td></tr>`
-    + '<tr><td style="padding:12px 40px 2px 40px;">'
+    + '<tr><td style="padding:6px 40px 2px 40px;">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
     + '<td valign="top">'
     + (kicker ? `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${CO.brass};text-transform:uppercase;">${esc(kicker)}</div>` : '')

@@ -41,7 +41,7 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     + `Moneda: <strong>${esc(m)}</strong>${m === 'USD' && data.trmReferencia ? ` (TRM ref. $${Number(data.trmReferencia).toLocaleString('es-CO')})` : ''}`;
 
   const box = (accent, kicker, html) => `<td width="50%" valign="top" style="padding:0 7px;">`
-    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border-left:3px solid ${accent};"><tr><td style="padding:8px 12px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.45;color:${CO.ink};">`
+    + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border-left:3px solid ${accent};"><tr><td style="padding:6px 10px;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;line-height:1.33;color:${CO.ink};">`
     + `<div style="font-size:9px;letter-spacing:2px;color:${CO.brass};margin-bottom:5px;text-transform:uppercase;">${kicker}</div>${html}`
     + '</td></tr></table></td>';
 
@@ -49,20 +49,20 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     pdfHeader({ kicker: 'Propuesta comercial', title: 'Cotización', metaHtml })
 
     // partes (hotel / cliente)
-    + '<tr><td style="padding:8px 33px 0 33px;">'
+    + '<tr><td style="padding:6px 33px 0 33px;">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
     + box(CO.green2, 'El hotel', `<strong>${esc(H.nombreLargo)}</strong><br>Razón social: ${esc(H.razonSocial)}<br>NIT: ${esc(H.nit)}<br>${esc(H.direccion)}`)
     + box(CO.brass, 'El cliente', `<strong>${esc(data.empresa || '')}</strong><br>Contacto: ${esc(data.contacto) || '–'}<br>Email: ${esc(data.email) || '–'}<br>Tel.: ${esc(data.telefono) || '–'}<br>Tipo: ${esc(data.tipoCotizacion)}${data.referencia ? ' · Ref: ' + esc(data.referencia) : ''}`)
     + '</tr></table></td></tr>'
 
     // disclaimer
-    + '<tr><td style="padding:8px 40px 0 40px;">'
+    + '<tr><td style="padding:6px 40px 0 40px;">'
     + `<div style="border:1px solid ${CO.creamLine};background:#fbfaf6;padding:7px 14px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-style:italic;line-height:1.4;color:${CO.muted};">`
     + 'Este documento es únicamente una <strong>cotización</strong> con fines informativos. No representa confirmación de reserva ni compromiso de disponibilidad.'
     + '</div></td></tr>'
 
     // tabla de ítems
-    + '<tr><td style="padding:10px 40px 0 40px;">'
+    + '<tr><td style="padding:6px 40px 0 40px;">'
     + pdfSectionTitle('Detalle de la cotización')
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:' + CO.ink + ';border-collapse:collapse;">'
     + `<thead><tr style="background:${CO.green2};color:#fff;">`
@@ -80,7 +80,7 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     + '</td></tr>'
 
     // totales
-    + '<tr><td style="padding:8px 40px 0 40px;">'
+    + '<tr><td style="padding:5px 40px 0 40px;">'
     + '<table role="presentation" width="300" align="right" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:' + CO.ink + ';">'
     + `<tr><td style="padding:4px 10px;">Subtotal ${esc(m)}</td><td style="padding:5px 10px;text-align:right;">${fmtMoneda(totales.subtotal, m)}</td></tr>`
     + filaServ
@@ -90,7 +90,7 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     + '</table></td></tr>'
 
     // pago en línea
-    + '<tr><td style="padding:10px 40px 0 40px;">'
+    + '<tr><td style="padding:6px 40px 0 40px;">'
     + `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${CO.cream};border:1px solid ${CO.creamLine};"><tr><td style="padding:9px 16px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${CO.ink};">`
     + `<span style="color:${CO.brass};font-weight:bold;letter-spacing:1px;">PAGO EN LÍNEA</span> &nbsp; `
     + `<a href="${esc(H.linkPago)}" style="color:${CO.brass};font-weight:bold;text-decoration:underline;">pagar con Wompi</a> `
