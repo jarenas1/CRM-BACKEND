@@ -30,6 +30,12 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
   const filaServ = totales.servicio > 0
     ? `<tr><td style="padding:4px 10px;">Impuesto de servicio (10%)</td><td style="padding:4px 10px;text-align:right;">${fmtMoneda(totales.servicio, m)}</td></tr>`
     : '';
+  const filaIva = totales.iva > 0
+    ? `<tr><td style="padding:4px 10px;">IVA (19%)</td><td style="padding:4px 10px;text-align:right;">${fmtMoneda(totales.iva, m)}</td></tr>`
+    : '';
+  const filaImpo = (totales.impoconsumo || 0) > 0
+    ? `<tr><td style="padding:4px 10px;">Impoconsumo (8%)</td><td style="padding:4px 10px;text-align:right;">${fmtMoneda(totales.impoconsumo, m)}</td></tr>`
+    : '';
 
   const firmaImg = firmante.firmaDataUri
     ? `<img src="${firmante.firmaDataUri}" alt="Firma" style="max-height:104px;max-width:440px;display:block;margin:0 0 4px;border:0;">`
@@ -84,7 +90,8 @@ module.exports = function buildCotizacionHtml(data, numero, totales, firmante = 
     + '<table role="presentation" width="300" align="right" cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:' + CO.ink + ';">'
     + `<tr><td style="padding:4px 10px;">Subtotal ${esc(m)}</td><td style="padding:5px 10px;text-align:right;">${fmtMoneda(totales.subtotal, m)}</td></tr>`
     + filaServ
-    + `<tr><td style="padding:4px 10px;">IVA (19%)</td><td style="padding:4px 10px;text-align:right;">${fmtMoneda(totales.iva, m)}</td></tr>`
+    + filaIva
+    + filaImpo
     + `<tr style="background:${CO.green2};color:#fff;"><td style="padding:9px 10px;font-family:Georgia,serif;font-weight:bold;">Total ${esc(m)}</td>`
     + `<td style="padding:9px 10px;text-align:right;font-family:Georgia,serif;font-weight:bold;font-size:14px;">${fmtMoneda(totales.total, m)}</td></tr>`
     + '</table></td></tr>'

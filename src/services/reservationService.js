@@ -32,8 +32,10 @@ function mapList(r) {
     valorNoche: parseFloat(p.valorNoche) || 0,
     subtotal: parseFloat(p.subtotal) || 0,
     iva: parseFloat(p.iva) || 0,
+    impoconsumo: parseFloat(p.impoconsumo) || 0,
     total: parseFloat(p.total) || 0,
     aplicaIva: p.aplicaIva,
+    aplicaImpoconsumo: p.aplicaImpoconsumo,
     estado: p.estado,
     observaciones: p.observaciones,
     fecha: p.createdAt,
@@ -64,6 +66,7 @@ async function create(data, user) {
     noches,
     data.numeroHabitaciones || 1,
     data.aplicaIva !== false,
+    !!data.aplicaImpoconsumo,
   );
   const count = await reservationRepo.count();
   const numero = generarNumero(env.prefijos.reserva, count + 1);
@@ -83,8 +86,10 @@ async function create(data, user) {
     fechaSalida: data.fechaSalida,
     valorNoche: parseFloat(data.valorNoche) || 0,
     aplicaIva: data.aplicaIva !== false,
+    aplicaImpoconsumo: !!data.aplicaImpoconsumo,
     subtotal: totales.subtotal,
     iva: totales.iva,
+    impoconsumo: totales.impoconsumo,
     total: totales.total,
     estado: data.estado || 'Pendiente',
     observaciones: data.observaciones || null,
@@ -101,13 +106,14 @@ async function update(id, data) {
   const camposPermitidos = [
     'titular', 'empresa', 'email', 'telefono', 'tipoHabitacion',
     'numeroHabitaciones', 'numeroHuespedes', 'fechaLlegada', 'fechaSalida',
-    'valorNoche', 'aplicaIva', 'estado', 'observaciones', 'codigoReserva',
+    'valorNoche', 'aplicaIva', 'aplicaImpoconsumo', 'estado', 'observaciones', 'codigoReserva',
   ];
   camposPermitidos.forEach((k) => { if (data[k] !== undefined) r[k] = data[k]; });
   r.noches = data.noches || calcularNoches(r.fechaLlegada, r.fechaSalida);
-  const totales = calcularTotalesReserva(r.valorNoche, r.noches, r.numeroHabitaciones, r.aplicaIva);
+  const totales = calcularTotalesReserva(r.valorNoche, r.noches, r.numeroHabitaciones, r.aplicaIva, r.aplicaImpoconsumo);
   r.subtotal = totales.subtotal;
   r.iva = totales.iva;
+  r.impoconsumo = totales.impoconsumo;
   r.total = totales.total;
   await r.save();
   return { ok: true, mensaje: 'Reserva actualizada' };

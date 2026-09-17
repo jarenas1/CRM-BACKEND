@@ -22,6 +22,7 @@ function mapList(q) {
     subtotal: parseFloat(p.subtotal) || 0,
     impuestoServicio: parseFloat(p.impuestoServicio) || 0,
     iva: parseFloat(p.iva) || 0,
+    impoconsumo: parseFloat(p.impoconsumo) || 0,
     total: parseFloat(p.total) || 0,
     estado: p.estado,
     fecha: p.createdAt,
@@ -92,6 +93,7 @@ async function create(data, user) {
     subtotal: totales.subtotal,
     impuestoServicio: totales.servicio,
     iva: totales.iva,
+    impoconsumo: totales.impoconsumo,
     total: totales.total,
     estado: 'Borrador',
     proximoSeguimiento: proxSeguimiento,
@@ -122,6 +124,7 @@ async function renderHtml(numero) {
     subtotal: parseFloat(q.subtotal),
     servicio: parseFloat(q.impuestoServicio),
     iva: parseFloat(q.iva),
+    impoconsumo: parseFloat(q.impoconsumo) || 0,
     total: parseFloat(q.total),
   };
   return tplCot(q, q.numero, totales, firmante);

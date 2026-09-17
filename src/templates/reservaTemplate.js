@@ -41,7 +41,10 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
   const aplicaIva = !!data.aplicaIva;
   const ivaPct = Math.round(env.iva * 100);
   const iva = aplicaIva ? (parseFloat(data.iva) || subtotal * env.iva) : 0;
-  const total = parseFloat(data.total) || subtotal + iva;
+  const aplicaImpo = !!data.aplicaImpoconsumo;
+  const impoPct = Math.round(env.impoconsumo * 100);
+  const impoconsumo = aplicaImpo ? (parseFloat(data.impoconsumo) || subtotal * env.impoconsumo) : 0;
+  const total = parseFloat(data.total) || subtotal + iva + impoconsumo;
 
   // Contenido editorial (fiel al generador de referencia)
   const intro = 'Gracias por elegir V Grand Hotel, a member of Radisson Individuals. De acuerdo con su solicitud, '
@@ -141,10 +144,13 @@ module.exports = function buildReservaHtml(data, numero, firmante = {}) {
     + (aplicaIva
       ? `<tr><td style="padding:4px 0;">IVA (${ivaPct}%)</td><td style="padding:4px 0;text-align:right;white-space:nowrap;">${fmtMoneda(iva, 'COP')}</td></tr>`
       : '')
+    + (aplicaImpo
+      ? `<tr><td style="padding:4px 0;">Impoconsumo (${impoPct}%)</td><td style="padding:4px 0;text-align:right;white-space:nowrap;">${fmtMoneda(impoconsumo, 'COP')}</td></tr>`
+      : '')
     + `<tr><td colspan="2" style="border-top:1px solid ${CO.creamLine};font-size:0;line-height:0;padding-top:8px;">&nbsp;</td></tr>`
     + `<tr><td style="padding:2px 0;font-family:Georgia,serif;font-size:16px;color:${CO.green2};"><strong>Total a pagar</strong></td>`
     + `<td style="padding:2px 0;text-align:right;font-family:Georgia,serif;font-size:18px;color:${CO.green2};white-space:nowrap;"><strong>${fmtMoneda(total, 'COP')}</strong></td></tr>`
-    + (aplicaIva ? `<tr><td colspan="2" style="padding-top:2px;font-size:12px;color:${CO.muted};">IVA incluido</td></tr>` : '')
+    + ((aplicaIva || aplicaImpo) ? `<tr><td colspan="2" style="padding-top:2px;font-size:12px;color:${CO.muted};">Impuestos incluidos</td></tr>` : '')
     + '</table></td></tr></table>'
     + `<p style="margin:7px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;line-height:1.45;color:${CO.muted};"><strong style="color:#6f6a60;">Nota sobre el IVA:</strong> ${esc(ivaNote)}</p>`
     + '</td></tr>'

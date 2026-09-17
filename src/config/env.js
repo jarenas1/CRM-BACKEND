@@ -80,6 +80,7 @@ const env = {
   },
 
   iva: 0.19,
+  impoconsumo: 0.08,
   impuestoServicio: 0.10,
 
   prefijos: {

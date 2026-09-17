@@ -60,15 +60,22 @@ async function start() {
 async function ensureSchema() {
   const { DataTypes } = require('sequelize');
   const qi = sequelize.getQueryInterface();
-  try {
-    const cols = await qi.describeTable('agreements');
-    if (!cols.tarifas) {
-      await qi.addColumn('agreements', 'tarifas', { type: DataTypes.JSONB, defaultValue: [] });
-      console.log('🧩 Columna agreements.tarifas creada');
+  const addIfMissing = async (table, column, spec) => {
+    try {
+      const cols = await qi.describeTable(table);
+      if (!cols[column]) {
+        await qi.addColumn(table, column, spec);
+        console.log(`🧩 Columna ${table}.${column} creada`);
+      }
+    } catch (e) {
+      console.warn(`⚠ ensureSchema ${table}.${column}:`, e.message);
     }
-  } catch (e) {
-    console.warn('⚠ ensureSchema:', e.message);
-  }
+  };
+  await addIfMissing('agreements', 'tarifas', { type: DataTypes.JSONB, defaultValue: [] });
+  // Impuestos condicionales (IVA por ítem + impoconsumo 8%)
+  await addIfMissing('quotations', 'impoconsumo', { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 });
+  await addIfMissing('reservations', 'aplicaImpoconsumo', { type: DataTypes.BOOLEAN, defaultValue: false });
+  await addIfMissing('reservations', 'impoconsumo', { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 });
 }
 
 async function ensureAdmin() {

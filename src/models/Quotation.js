@@ -21,6 +21,7 @@ const Quotation = sequelize.define('Quotation', {
   subtotal: { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 },
   impuestoServicio: { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 },
   iva: { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 },
+  impoconsumo: { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 },
   total: { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 },
   estado: { type: DataTypes.STRING(40), defaultValue: 'Borrador' },
   proximoSeguimiento: { type: DataTypes.DATEONLY },

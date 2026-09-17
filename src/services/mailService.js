@@ -89,7 +89,7 @@ async function sendQuotation({ numero, user, extraCc, mensajePersonalizado }) {
   const pdfBuffer = await quotationService.renderPdf(numero);
   const totales = {
     subtotal: parseFloat(q.subtotal), servicio: parseFloat(q.impuestoServicio),
-    iva: parseFloat(q.iva), total: parseFloat(q.total),
+    iva: parseFloat(q.iva), impoconsumo: parseFloat(q.impoconsumo) || 0, total: parseFloat(q.total),
   };
   const firmaAtt = usePublicEmailLogos() ? null : firmaInlineAttachment(sender.firma, 'firma-usuario');
   const firmante = { nombre: sender.name, cargo: sender.cargo, firmaCid: firmaAtt ? 'firma-usuario' : null };
