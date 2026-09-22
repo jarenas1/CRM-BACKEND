@@ -20,6 +20,8 @@ const Agreement = sequelize.define('Agreement', {
   tarifaDoble: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
   tarifaSuite: { type: DataTypes.DECIMAL(14, 2), defaultValue: 0 },
   personaAdicional: { type: DataTypes.DECIMAL(14, 2), defaultValue: 120000 },
+  // Comisión del convenio en % (0 = no comisionable).
+  comision: { type: DataTypes.DECIMAL(5, 2), defaultValue: 0 },
   vigenciaHasta: { type: DataTypes.DATEONLY },
   fechasRestringidas: { type: DataTypes.STRING(255) },
   estado: { type: DataTypes.STRING(40), defaultValue: 'Borrador' },

@@ -82,6 +82,7 @@ async function create(data, user) {
     telefono: data.telefono,
     tarifas: normTarifas({ tarifas: data.tarifas }),
     personaAdicional: data.personaAdicional || 120000,
+    comision: parseFloat(data.comision) || 0,
     vigenciaHasta: data.vigenciaHasta || null,
     fechasRestringidas: data.fechasRestringidas || null,
     estado: 'Borrador',

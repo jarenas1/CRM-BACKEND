@@ -7,6 +7,11 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
   const fecha = fmtFechaLarga(new Date());
   const vig = fmtFechaLarga(data.vigenciaHasta) || `31 de diciembre de ${new Date().getFullYear()}`;
   const pa = parseFloat(data.personaAdicional) || 120000;
+  const comision = parseFloat(data.comision) || 0;
+  const comisionPct = Number.isInteger(comision) ? comision : comision.toFixed(2).replace(/\.?0+$/, '');
+  const comisionTexto = comision > 0
+    ? `Tarifas COMISIONABLES · comisión del ${comisionPct}%`
+    : 'Tarifas NO COMISIONABLES';
 
   const tarifas = (Array.isArray(data.tarifas) ? data.tarifas : []).filter((t) => t && t.tipo);
   const tarifaRows = tarifas.map((t, i) => {
@@ -43,7 +48,7 @@ module.exports = function buildConvenioHtml(data, numero, firmante = {}) {
     + `<tbody>${tarifaRows || `<tr><td colspan="2" style="padding:9px 12px;border:1px solid ${CO.line};text-align:center;color:${CO.muted};">Sin tarifas registradas</td></tr>`}</tbody></table>`
     + `<div style="text-align:center;margin-top:10px;font-size:11px;font-weight:bold;color:${CO.green2};">Convenio vigente hasta el ${vig}</div>`
     + `<div style="text-align:center;font-size:9.5px;font-style:italic;margin-top:3px;color:${CO.muted};">Tarifas en pesos colombianos (COP), sujetas a impuestos al momento de la llegada.</div>`
-    + `<div style="text-align:center;font-size:10px;font-weight:bold;margin-top:5px;">Tarifas NO COMISIONABLES · NO INCLUYEN IMPUESTOS — considerar IVA del 19%</div>`
+    + `<div style="text-align:center;font-size:10px;font-weight:bold;margin-top:5px;">${comisionTexto} · NO INCLUYEN IMPUESTOS — considerar IVA del 19%</div>`
 
     + `<div ${sec}>Hora de registro y salida</div>`
     + '<table style="font-family:Arial,Helvetica,sans-serif;font-size:10.5px;"><tr>'

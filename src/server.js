@@ -72,6 +72,7 @@ async function ensureSchema() {
     }
   };
   await addIfMissing('agreements', 'tarifas', { type: DataTypes.JSONB, defaultValue: [] });
+  await addIfMissing('agreements', 'comision', { type: DataTypes.DECIMAL(5, 2), defaultValue: 0 });
   // Impuestos condicionales (IVA por ítem + impoconsumo 8%)
   await addIfMissing('quotations', 'impoconsumo', { type: DataTypes.DECIMAL(16, 2), defaultValue: 0 });
   await addIfMissing('reservations', 'aplicaImpoconsumo', { type: DataTypes.BOOLEAN, defaultValue: false });
