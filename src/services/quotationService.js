@@ -160,8 +160,8 @@ async function update(numero, data) {
   q.telefono = data.telefono ?? q.telefono;
   q.tipoCotizacion = data.tipoCotizacion ?? q.tipoCotizacion;
   q.moneda = moneda;
-  q.trmReferencia = data.trmReferencia ?? q.trmReferencia;
-  q.fechaCaducidad = data.fechaCaducidad ?? q.fechaCaducidad;
+  q.trmReferencia = data.trmReferencia || null;
+  q.fechaCaducidad = data.fechaCaducidad || null;
   q.referencia = data.referencia ?? q.referencia;
   q.items = data.items ?? q.items;
   q.subtotal = totales.subtotal;
