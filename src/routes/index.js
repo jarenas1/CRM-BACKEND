@@ -52,6 +52,7 @@ router.get('/quotations/:numero/preview', quotationController.renderHtml);
 router.get('/quotations/:numero/pdf', quotationController.renderPdf);
 router.post('/quotations', auth.authRequired, quotationController.create);
 router.post('/quotations/email-preview', auth.authRequired, quotationController.emailPreview);
+router.put('/quotations/:numero', auth.authRequired, quotationController.update);
 router.put('/quotations/:numero/state', auth.authRequired, quotationController.updateState);
 
 // ─── Agreements ───

@@ -18,6 +18,10 @@ async function create(req, res) {
   res.json(await quotationService.create(req.body, req.user));
 }
 
+async function update(req, res) {
+  res.json(await quotationService.update(req.params.numero, req.body));
+}
+
 async function updateState(req, res) {
   res.json(await quotationService.updateState(req.params.numero, req.body.estado, req.body.proximoSeguimiento));
 }
@@ -38,4 +42,4 @@ async function emailPreview(req, res) {
   res.json({ html: await quotationService.emailPreview(req.body) });
 }
 
-module.exports = { list, search, load, create, updateState, renderHtml, renderPdf, emailPreview };
+module.exports = { list, search, load, create, update, updateState, renderHtml, renderPdf, emailPreview };

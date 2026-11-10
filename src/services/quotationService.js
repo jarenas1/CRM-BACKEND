@@ -135,6 +135,48 @@ async function renderPdf(numero) {
   return renderHtmlToPdfBuffer(html);
 }
 
+async function update(numero, data) {
+  const q = await quotationRepo.findByNumero(numero);
+  if (!q) throw Object.assign(new Error('No se encontró el documento ' + numero), { status: 404 });
+
+  const moneda = data.moneda || q.moneda || 'COP';
+  const totales = calcularTotalesCotizacion(data.items, moneda);
+
+  if (data.empresa) {
+    await companyRepo.ensureExists(data.empresa, data);
+    await contactRepo.ensureExists({
+      empresa: data.empresa,
+      nombre: data.contacto,
+      cargo: data.cargo,
+      email: data.email,
+      telefono: data.telefono,
+    });
+  }
+
+  q.empresa = data.empresa ?? q.empresa;
+  q.contacto = data.contacto ?? q.contacto;
+  q.cargo = data.cargo ?? q.cargo;
+  q.email = data.email ?? q.email;
+  q.telefono = data.telefono ?? q.telefono;
+  q.tipoCotizacion = data.tipoCotizacion ?? q.tipoCotizacion;
+  q.moneda = moneda;
+  q.trmReferencia = data.trmReferencia ?? q.trmReferencia;
+  q.fechaCaducidad = data.fechaCaducidad ?? q.fechaCaducidad;
+  q.referencia = data.referencia ?? q.referencia;
+  q.items = data.items ?? q.items;
+  q.subtotal = totales.subtotal;
+  q.impuestoServicio = totales.servicio;
+  q.iva = totales.iva;
+  q.impoconsumo = totales.impoconsumo;
+  q.total = totales.total;
+  q.mensajePersonalizado = data.mensajePersonalizado ?? q.mensajePersonalizado;
+  q.emailCC = data.emailCC ?? q.emailCC;
+
+  await q.save();
+
+  return { ok: true, numero: q.numero, id: q.id, totales };
+}
+
 async function updateState(numero, estado, proxSeguimiento) {
   const q = await quotationRepo.findByNumero(numero);
   if (!q) return { ok: false, mensaje: 'Documento no encontrado' };
@@ -151,4 +193,4 @@ async function emailPreview(data) {
   });
 }
 
-module.exports = { list, search, load, create, renderHtml, renderPdf, updateState, emailPreview };
+module.exports = { list, search, load, create, update, renderHtml, renderPdf, updateState, emailPreview };
